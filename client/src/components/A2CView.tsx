@@ -7,8 +7,10 @@ interface A2CData {
   lvWallMotion: string | null;
   avLvotStructure: string | null;
   lvotDiameter: string;
-  mrAr: string;
-  msAs: string;
+  mr: string;
+  ar: string;
+  ms: string;
+  as: string;
   avVmax: string;
   avMeanPG: string;
   avAVA: string;
@@ -73,16 +75,31 @@ export default function A2CView({ data, onChange, substep }: A2CViewProps) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SeveritySelect
-                  label="MR / AR"
-                  value={data.mrAr}
-                  onChange={(value) => onChange({ mrAr: value })}
-                  testId="select-mr-ar"
+                  label="MR"
+                  value={data.mr}
+                  onChange={(value) => onChange({ mr: value })}
+                  testId="select-mr"
                 />
                 <SeveritySelect
-                  label="MS / AS"
-                  value={data.msAs}
-                  onChange={(value) => onChange({ msAs: value })}
-                  testId="select-ms-as"
+                  label="AR"
+                  value={data.ar}
+                  onChange={(value) => onChange({ ar: value })}
+                  testId="select-ar"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SeveritySelect
+                  label="MS"
+                  value={data.ms}
+                  onChange={(value) => onChange({ ms: value })}
+                  testId="select-ms"
+                />
+                <SeveritySelect
+                  label="AS"
+                  value={data.as}
+                  onChange={(value) => onChange({ as: value })}
+                  testId="select-as"
                 />
               </div>
             </CardContent>

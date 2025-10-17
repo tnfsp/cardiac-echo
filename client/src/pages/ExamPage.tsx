@@ -87,8 +87,10 @@ export default function ExamPage() {
     lvWallMotion: null as string | null,
     avLvotStructure: null as string | null,
     lvotDiameter: '',
-    mrAr: 'none',
-    msAs: 'none',
+    mr: 'none',
+    ar: 'none',
+    ms: 'none',
+    as: 'none',
     avVmax: '',
     avMeanPG: '',
     avAVA: ''
@@ -451,8 +453,10 @@ export default function ExamPage() {
       if (a4cData.tr !== 'none') valvularParts.push(`TR: ${a4cData.tr}`);
       
       // A2C valve data
-      if (a2cData.mrAr !== 'none') valvularParts.push(`MR/AR: ${a2cData.mrAr}`);
-      if (a2cData.msAs !== 'none') valvularParts.push(`MS/AS: ${a2cData.msAs}`);
+      if (a2cData.mr !== 'none') valvularParts.push(`MR: ${a2cData.mr}`);
+      if (a2cData.ar !== 'none') valvularParts.push(`AR: ${a2cData.ar}`);
+      if (a2cData.ms !== 'none') valvularParts.push(`MS: ${a2cData.ms}`);
+      if (a2cData.as !== 'none') valvularParts.push(`AS: ${a2cData.as}`);
       
       if (valvularParts.length > 0) {
         updates.valvular = valvularParts.join(', ');
