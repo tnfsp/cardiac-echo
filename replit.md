@@ -183,6 +183,7 @@ Preferred communication style: Simple, everyday language.
 - **Dynamic step progression**: Navigation adapts based on clinical findings, ensuring thorough examination
 
 ### Auto-populated Summary
+- **Display-only Summary Section**: All examination findings auto-populated and displayed as read-only text
 - **LV Function**: Auto-filled from A4C contraction status and Simpson EF
 - **RV Function**: Auto-filled from RV contraction status and TAPSE measurement
 - **Valvular Assessment**: Aggregates all valve findings (MR, MS, AR, AS, TR) from PLAX, A4C, and A2C views
@@ -190,6 +191,7 @@ Preferred communication style: Simple, everyday language.
 - **Aorta/LA**: Combines aortic root and LA measurements from PLAX
 - **Pericardium**: Auto-populates pericardial effusion status from PLAX and Subcostal views
 - **IVC/Volume Status**: Includes IVC measurements and volume assessment from Subcostal view
+- **Notes Section**: Separate editable text area for free-form clinical notes and observations
 
 ### Form Input Improvements
 - **PSAX Color Doppler dropdowns**: Changed PV/TV/AV color from text inputs to dropdown selects:

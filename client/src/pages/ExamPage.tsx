@@ -136,7 +136,8 @@ export default function ExamPage() {
     asdVsd: '',
     aorta: '',
     pericardium: '',
-    conclusion: ''
+    ivcVolume: '',
+    notes: ''
   });
 
   // Track ASD/VSD detail visibility
@@ -342,8 +343,9 @@ export default function ExamPage() {
     if (summaryData.asdVsd) report += `ASD/VSD: ${summaryData.asdVsd}\n`;
     if (summaryData.aorta) report += `Aorta/LA: ${summaryData.aorta}\n`;
     if (summaryData.pericardium) report += `Pericardium: ${summaryData.pericardium}\n`;
-    if (summaryData.conclusion) {
-      report += `\n【結論】\n${summaryData.conclusion}\n`;
+    if (summaryData.ivcVolume) report += `IVC/Volume: ${summaryData.ivcVolume}\n`;
+    if (summaryData.notes) {
+      report += `\n【臨床筆記】\n${summaryData.notes}\n`;
     }
 
     report += `\n【詳細測量】\n`;
@@ -466,7 +468,7 @@ export default function ExamPage() {
         updates.aorta = parts.join(', ');
       }
 
-      // Pericardium and IVC
+      // Pericardium
       const pericardiumParts = [];
       if (plaxData.pericardialEffusion && plaxData.pericardialEffusion !== 'none') {
         pericardiumParts.push(`Pericardial effusion: ${plaxData.pericardialEffusion}`);
@@ -474,14 +476,26 @@ export default function ExamPage() {
       if (subcostalData.pericardialEffusion && subcostalData.pericardialEffusion !== 'none') {
         pericardiumParts.push(`Pericardial effusion: ${subcostalData.pericardialEffusion}`);
       }
-      if (subcostalData.ivcDiameter) {
-        pericardiumParts.push(`IVC: ${subcostalData.ivcDiameter}cm`);
-      }
-      if (subcostalData.volumeStatus) {
-        pericardiumParts.push(`Volume: ${subcostalData.volumeStatus}`);
-      }
       if (pericardiumParts.length > 0) {
         updates.pericardium = pericardiumParts.join(', ');
+      }
+
+      // IVC / Volume Status
+      const ivcParts = [];
+      if (subcostalData.ivcDiameter) {
+        ivcParts.push(`IVC diameter: ${subcostalData.ivcDiameter}cm`);
+      }
+      if (subcostalData.ivcCollapseRatio) {
+        ivcParts.push(`Collapse ratio: ${subcostalData.ivcCollapseRatio}%`);
+      }
+      if (subcostalData.volumeStatus) {
+        ivcParts.push(`Volume status: ${subcostalData.volumeStatus}`);
+      }
+      if (subcostalData.raIvcFlow) {
+        ivcParts.push(`RA/IVC flow: ${subcostalData.raIvcFlow}`);
+      }
+      if (ivcParts.length > 0) {
+        updates.ivcVolume = ivcParts.join(', ');
       }
 
       // ASD/VSD
