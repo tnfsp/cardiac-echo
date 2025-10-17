@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import StepProgress from "@/components/StepProgress";
 import PatientHeader from "@/components/PatientHeader";
 import PLAXView from "@/components/PLAXView";
+import PSAXView from "@/components/PSAXView";
+import A4CView from "@/components/A4CView";
 import SummaryView from "@/components/SummaryView";
+import ViewHeader from "@/components/ViewHeader";
+import ValveDetailView from "@/components/ValveDetailView";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ExamPage() {
@@ -38,6 +42,54 @@ export default function ExamPage() {
     as: 'none'
   });
 
+  // PSAX data state
+  const [psaxData, setPsaxData] = useState({
+    avStatus: null as string | null,
+    mvStatus: null as string | null,
+    lvStatus: null as string | null,
+    rvotStatus: null as string | null,
+    rvotDiameter: '',
+    paDiameter: '',
+    lvFS: '',
+    lvFSLevel: null as string | null,
+    pvColor: '',
+    tvColor: '',
+    avColor: '',
+    trVmax: '',
+    rvsp: ''
+  });
+
+  // A4C data state
+  const [a4cData, setA4cData] = useState({
+    lvSize: null as string | null,
+    lvContraction: null as string | null,
+    simpsonEF: '',
+    rvSize: null as string | null,
+    rvContraction: null as string | null,
+    tapse: '',
+    septalMotion: null as string | null,
+    ms: 'none',
+    mr: 'none',
+    mrEROA: '',
+    mrVC: '',
+    tr: 'none',
+    trVC: '',
+    mvE: '',
+    mvA: '',
+    decelTime: '',
+    trVmax: '',
+    rvsp: '',
+    tdiSept: '',
+    tdiLat: '',
+    eRatio: ''
+  });
+
+  // Valve detail data
+  const [valveDetailData, setValveDetailData] = useState({});
+
+  // Track which valve details to show
+  const [valveDetailsToShow, setValveDetailsToShow] = useState<Array<'AS' | 'AR' | 'MS' | 'MR'>>([]);
+
   // Summary data state
   const [summaryData, setSummaryData] = useState({
     lvFunction: '',
@@ -52,14 +104,57 @@ export default function ExamPage() {
     conclusion: ''
   });
 
-  const steps = [
+  const baseSteps = [
     { id: 'plax', label: 'PLAX', shortLabel: 'PLAX' },
     { id: 'psax', label: 'PSAX', shortLabel: 'PSAX' },
     { id: 'a4c', label: 'A4C', shortLabel: 'A4C' },
     { id: 'a2c', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
     { id: 'subcostal', label: 'Subcostal', shortLabel: 'Sub' },
-    { id: 'summary', label: 'Summary', shortLabel: 'Sum' },
   ];
+
+  const valveSteps = valveDetailsToShow.map(valve => ({
+    id: `valve-${valve.toLowerCase()}`,
+    label: valve,
+    shortLabel: valve
+  }));
+
+  const steps = [
+    ...baseSteps,
+    ...valveSteps,
+    { id: 'summary', label: 'Summary', shortLabel: 'Sum' }
+  ];
+
+  // Check for valve severity and update valve details to show
+  useEffect(() => {
+    const newValveDetails: Array<'AS' | 'AR' | 'MS' | 'MR'> = [];
+    
+    // Check PLAX data
+    if (plaxData.mr === 'mod' || plaxData.mr === 'sev') {
+      if (!newValveDetails.includes('MR')) newValveDetails.push('MR');
+    }
+    if (plaxData.ms === 'mod' || plaxData.ms === 'sev') {
+      if (!newValveDetails.includes('MS')) newValveDetails.push('MS');
+    }
+    if (plaxData.ar === 'mod' || plaxData.ar === 'sev') {
+      if (!newValveDetails.includes('AR')) newValveDetails.push('AR');
+    }
+    if (plaxData.as === 'mod' || plaxData.as === 'sev') {
+      if (!newValveDetails.includes('AS')) newValveDetails.push('AS');
+    }
+
+    // Check A4C data
+    if (a4cData.mr === 'mod' || a4cData.mr === 'sev') {
+      if (!newValveDetails.includes('MR')) newValveDetails.push('MR');
+    }
+    if (a4cData.ms === 'mod' || a4cData.ms === 'sev') {
+      if (!newValveDetails.includes('MS')) newValveDetails.push('MS');
+    }
+    if (a4cData.tr === 'mod' || a4cData.tr === 'sev') {
+      // TR doesn't have detail view in requirements, skip
+    }
+
+    setValveDetailsToShow(newValveDetails);
+  }, [plaxData, a4cData]);
 
   const currentIndex = steps.findIndex(s => s.id === currentStep);
 
@@ -96,6 +191,9 @@ export default function ExamPage() {
     console.log('Generating report with data:', {
       patient: patientData,
       plax: plaxData,
+      psax: psaxData,
+      a4c: a4cData,
+      valveDetails: valveDetailData,
       summary: summaryData
     });
 
@@ -105,7 +203,103 @@ export default function ExamPage() {
     });
   };
 
+  // Auto-populate summary based on collected data
+  useEffect(() => {
+    if (currentStep === 'summary') {
+      const updates: any = {};
+      
+      // LV function
+      if (a4cData.lvContraction && a4cData.simpsonEF) {
+        const lvDesc = a4cData.lvContraction === 'normal' ? 'Normal' : `Decreased (${a4cData.lvContraction})`;
+        updates.lvFunction = lvDesc;
+        updates.ef = a4cData.simpsonEF;
+      }
+      if (psaxData.lvFS) {
+        updates.fs = psaxData.lvFS;
+      }
+
+      // RV function
+      if (a4cData.rvContraction && a4cData.tapse) {
+        const rvDesc = a4cData.rvContraction === 'normal' ? 'Normal' : `Decreased (${a4cData.rvContraction})`;
+        updates.rvFunction = rvDesc;
+        updates.tapse = a4cData.tapse;
+      }
+
+      // Valvular
+      const valvularParts = [];
+      if (plaxData.mr !== 'none') valvularParts.push(`MR: ${plaxData.mr}`);
+      if (plaxData.ms !== 'none') valvularParts.push(`MS: ${plaxData.ms}`);
+      if (plaxData.ar !== 'none') valvularParts.push(`AR: ${plaxData.ar}`);
+      if (plaxData.as !== 'none') valvularParts.push(`AS: ${plaxData.as}`);
+      if (a4cData.tr !== 'none') valvularParts.push(`TR: ${a4cData.tr}`);
+      if (valvularParts.length > 0) {
+        updates.valvular = valvularParts.join(', ');
+      }
+
+      // Aorta/LA
+      if (plaxData.aorticRoot || plaxData.la) {
+        const parts = [];
+        if (plaxData.aorticRoot) parts.push(`Ao: ${plaxData.aorticRoot}mm`);
+        if (plaxData.la) parts.push(`LA: ${plaxData.la}mm`);
+        updates.aorta = parts.join(', ');
+      }
+
+      // Pericardium
+      if (plaxData.pericardialEffusion && plaxData.pericardialEffusion !== 'none') {
+        updates.pericardium = `Pericardial effusion: ${plaxData.pericardialEffusion}`;
+      }
+
+      setSummaryData(prev => ({ ...prev, ...updates }));
+    }
+  }, [currentStep, plaxData, psaxData, a4cData]);
+
+  const getViewColor = (stepId: string) => {
+    const colors: Record<string, string> = {
+      'plax': 'bg-[#0B5394]',
+      'psax': 'bg-[#1155CC]',
+      'a4c': 'bg-[#0B8043]',
+      'a2c': 'bg-[#B45F06]',
+      'subcostal': 'bg-[#741B47]',
+      'summary': 'bg-[#34A853]'
+    };
+    
+    if (stepId.startsWith('valve-')) {
+      return 'bg-[#E67C73]';
+    }
+    
+    return colors[stepId] || 'bg-primary';
+  };
+
+  const getViewTitle = (stepId: string) => {
+    if (stepId.startsWith('valve-')) {
+      const valve = stepId.replace('valve-', '').toUpperCase();
+      return `${valve} - Detailed Assessment`;
+    }
+    
+    const titles: Record<string, string> = {
+      'plax': 'Parasternal Long Axis (PLAX)',
+      'psax': 'Parasternal Short Axis (PSAX)',
+      'a4c': 'Apical 4 Chamber (A4C)',
+      'a2c': 'Apical 2/3/5 Chamber (A2C/A3C/A5C)',
+      'subcostal': 'Subcostal View',
+      'summary': 'Summary & Impression'
+    };
+    
+    return titles[stepId] || stepId.toUpperCase();
+  };
+
   const renderStepContent = () => {
+    if (currentStep.startsWith('valve-')) {
+      const valveType = currentStep.replace('valve-', '').toUpperCase() as 'AS' | 'AR' | 'MS' | 'MR';
+      return (
+        <ValveDetailView
+          valveType={valveType}
+          data={valveDetailData}
+          onChange={(updates) => setValveDetailData({ ...valveDetailData, ...updates })}
+        />
+      );
+    }
+
     switch (currentStep) {
       case 'plax':
         return (
@@ -115,14 +309,26 @@ export default function ExamPage() {
           />
         );
       case 'psax':
+        return (
+          <PSAXView
+            data={psaxData}
+            onChange={(updates) => setPsaxData({ ...psaxData, ...updates })}
+          />
+        );
       case 'a4c':
+        return (
+          <A4CView
+            data={a4cData}
+            onChange={(updates) => setA4cData({ ...a4cData, ...updates })}
+          />
+        );
       case 'a2c':
       case 'subcostal':
         return (
-          <div className="flex items-center justify-center min-h-[400px] p-8">
+          <div className="flex items-center justify-center h-full p-8">
             <div className="text-center space-y-4">
               <h3 className="text-2xl font-semibold text-foreground">
-                {steps.find(s => s.id === currentStep)?.label} View
+                {getViewTitle(currentStep)}
               </h3>
               <p className="text-muted-foreground">
                 Examination form for this view coming soon
@@ -143,7 +349,7 @@ export default function ExamPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <PatientHeader
         date={patientData.date}
         physician={patientData.physician}
@@ -166,7 +372,12 @@ export default function ExamPage() {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6">
+      <ViewHeader
+        title={getViewTitle(currentStep)}
+        colorClass={getViewColor(currentStep)}
+      />
+
+      <div className="flex-1 overflow-hidden">
         {renderStepContent()}
       </div>
 
