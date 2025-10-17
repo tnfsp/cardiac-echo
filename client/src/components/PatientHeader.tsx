@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +32,6 @@ export default function PatientHeader({
   onPurposeToggle
 }: PatientHeaderProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [hasAutoCollapsed, setHasAutoCollapsed] = useState(false);
   
   const purposeOptions = [
     { id: 'preop', label: '術前 (Pre-op)' },
@@ -47,14 +46,6 @@ export default function PatientHeader({
     const option = purposeOptions.find(opt => opt.id === p);
     return option?.label || p;
   }).join(', ');
-
-  // Auto-collapse when all required fields are filled
-  useEffect(() => {
-    if (hasRequiredData && !hasAutoCollapsed) {
-      setIsExpanded(false);
-      setHasAutoCollapsed(true);
-    }
-  }, [hasRequiredData, hasAutoCollapsed]);
 
   return (
     <div className="bg-card border-b border-card-border">
