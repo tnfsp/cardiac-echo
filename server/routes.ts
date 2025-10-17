@@ -7,8 +7,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload exam report to Google Sheets
   app.post("/api/upload-report", async (req, res) => {
     try {
-      const reportData = req.body;
-      const result = await uploadExamReport(reportData);
+      const { spreadsheetId, ...reportData } = req.body;
+      const result = await uploadExamReport(reportData, spreadsheetId);
       res.json({ 
         success: true, 
         spreadsheetUrl: result.spreadsheetUrl,

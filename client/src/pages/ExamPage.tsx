@@ -407,7 +407,11 @@ export default function ExamPage() {
 
   const handleUploadToCloud = async () => {
     try {
+      // Load existing spreadsheet ID from localStorage
+      const existingSpreadsheetId = localStorage.getItem('cardiacExamSpreadsheetId');
+      
       const reportData = {
+        spreadsheetId: existingSpreadsheetId || undefined,
         patient: patientData,
         plax: plaxData,
         psax: psaxData,
@@ -422,10 +426,16 @@ export default function ExamPage() {
       const response = await apiRequest('POST', '/api/upload-report', reportData);
       const result = await response.json();
 
-      if (result.spreadsheetUrl) {
+      if (result.spreadsheetId && result.spreadsheetUrl) {
+        // Save spreadsheet ID to localStorage for future uploads
+        localStorage.setItem('cardiacExamSpreadsheetId', result.spreadsheetId);
+        
+        const isFirstTime = !existingSpreadsheetId;
         toast({
           title: "上傳成功",
-          description: "檢查報告已上傳到Google Sheets雲端。",
+          description: isFirstTime 
+            ? "已創建新的Google Sheets記錄表，後續檢查將記錄到同一個表格中。" 
+            : "檢查報告已新增到Google Sheets雲端記錄表。",
         });
         // Optionally open the spreadsheet
         // window.open(result.spreadsheetUrl, '_blank');

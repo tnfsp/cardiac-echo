@@ -47,164 +47,285 @@ export async function getUncachableGoogleSheetClient() {
   return google.sheets({ version: 'v4', auth: oauth2Client });
 }
 
-export async function uploadExamReport(reportData: any) {
+// Helper function to create header row
+function createHeaderRow(): string[] {
+  return [
+    'Date',
+    'Physician',
+    'Patient ID',
+    'Bed Number',
+    'Purposes',
+    // PLAX
+    'PLAX AV/MV Structure',
+    'PLAX Pericardial Effusion',
+    'PLAX Aortic Root',
+    'PLAX LA',
+    'PLAX LVOT',
+    'PLAX IVS',
+    'PLAX LVESd',
+    'PLAX LVPW',
+    'PLAX LVEDd',
+    'PLAX MR',
+    'PLAX MS',
+    'PLAX AR',
+    'PLAX AS',
+    // PSAX
+    'PSAX AV Status',
+    'PSAX MV Status',
+    'PSAX LV Status',
+    'PSAX RVOT Status',
+    'PSAX LV FS%',
+    'PSAX LV FS Level',
+    'PSAX PV Color',
+    'PSAX TV Color',
+    'PSAX AV Color',
+    'PSAX TR Vmax',
+    'PSAX RVSP',
+    // A4C
+    'A4C LV Size',
+    'A4C LV Contraction',
+    'A4C Simpson EF',
+    'A4C RV Size',
+    'A4C RV Contraction',
+    'A4C TAPSE',
+    'A4C Septal Motion',
+    'A4C MS',
+    'A4C MR',
+    'A4C TR',
+    'A4C MV E',
+    'A4C MV A',
+    'A4C Decel Time',
+    'A4C TR Vmax',
+    'A4C RVSP',
+    'A4C TDI Septal',
+    'A4C TDI Lateral',
+    'A4C E/e\' Ratio',
+    // A2C
+    'A2C LV Wall Motion',
+    'A2C AV/LVOT Structure',
+    'A2C LVOT Diameter',
+    'A2C MR',
+    'A2C AR',
+    'A2C MS',
+    'A2C AS',
+    'A2C AV Vmax',
+    'A2C AV Mean PG',
+    'A2C AVA',
+    // Subcostal
+    'Subcostal ASD',
+    'Subcostal VSD',
+    'Subcostal Pericardial Effusion',
+    'Subcostal IVC Diameter',
+    'Subcostal IVC Collapse Ratio',
+    'Subcostal Volume Status',
+    'Subcostal RA/IVC Flow',
+    // Summary
+    'Summary LV Function',
+    'Summary EF',
+    'Summary FS',
+    'Summary RV Function',
+    'Summary TAPSE',
+    'Summary Valvular',
+    'Summary ASD/VSD',
+    'Summary Aorta/LA',
+    'Summary Pericardium',
+    'Summary IVC/Volume',
+    'Summary Notes'
+  ];
+}
+
+// Helper function to create data row from report data
+function createDataRow(reportData: any): string[] {
+  return [
+    reportData.patient.date || '',
+    reportData.patient.physician || '',
+    reportData.patient.patientId || '',
+    reportData.patient.bedNumber || '',
+    reportData.patient.purposes?.join(', ') || '',
+    // PLAX
+    reportData.plax.avMvStructure || '',
+    reportData.plax.pericardialEffusion || '',
+    reportData.plax.aorticRoot || '',
+    reportData.plax.la || '',
+    reportData.plax.lvot || '',
+    reportData.plax.ivs || '',
+    reportData.plax.lvesd || '',
+    reportData.plax.lvpw || '',
+    reportData.plax.lvedd || '',
+    reportData.plax.mr || '',
+    reportData.plax.ms || '',
+    reportData.plax.ar || '',
+    reportData.plax.as || '',
+    // PSAX
+    reportData.psax.avStatus || '',
+    reportData.psax.mvStatus || '',
+    reportData.psax.lvStatus || '',
+    reportData.psax.rvotStatus || '',
+    reportData.psax.lvFS || '',
+    reportData.psax.lvFSLevel || '',
+    reportData.psax.pvColor || '',
+    reportData.psax.tvColor || '',
+    reportData.psax.avColor || '',
+    reportData.psax.trVmax || '',
+    reportData.psax.rvsp || '',
+    // A4C
+    reportData.a4c.lvSize || '',
+    reportData.a4c.lvContraction || '',
+    reportData.a4c.simpsonEF || '',
+    reportData.a4c.rvSize || '',
+    reportData.a4c.rvContraction || '',
+    reportData.a4c.tapse || '',
+    reportData.a4c.septalMotion || '',
+    reportData.a4c.ms || '',
+    reportData.a4c.mr || '',
+    reportData.a4c.tr || '',
+    reportData.a4c.mvE || '',
+    reportData.a4c.mvA || '',
+    reportData.a4c.decelTime || '',
+    reportData.a4c.trVmax || '',
+    reportData.a4c.rvsp || '',
+    reportData.a4c.tdiSept || '',
+    reportData.a4c.tdiLat || '',
+    reportData.a4c.eRatio || '',
+    // A2C
+    reportData.a2c.lvWallMotion || '',
+    reportData.a2c.avLvotStructure || '',
+    reportData.a2c.lvotDiameter || '',
+    reportData.a2c.mr || '',
+    reportData.a2c.ar || '',
+    reportData.a2c.ms || '',
+    reportData.a2c.as || '',
+    reportData.a2c.avVmax || '',
+    reportData.a2c.avMeanPG || '',
+    reportData.a2c.avAVA || '',
+    // Subcostal
+    reportData.subcostal.asd || '',
+    reportData.subcostal.vsd || '',
+    reportData.subcostal.pericardialEffusion || '',
+    reportData.subcostal.ivcDiameter || '',
+    reportData.subcostal.ivcCollapseRatio || '',
+    reportData.subcostal.volumeStatus || '',
+    reportData.subcostal.raIvcFlow || '',
+    // Summary
+    reportData.summary.lvFunction || '',
+    reportData.summary.ef || '',
+    reportData.summary.fs || '',
+    reportData.summary.rvFunction || '',
+    reportData.summary.tapse || '',
+    reportData.summary.valvular || '',
+    reportData.summary.asdVsd || '',
+    reportData.summary.aorta || '',
+    reportData.summary.pericardium || '',
+    reportData.summary.ivcVolume || '',
+    reportData.summary.notes || ''
+  ];
+}
+
+export async function uploadExamReport(reportData: any, existingSpreadsheetId?: string) {
   const sheets = await getUncachableGoogleSheetClient();
   
-  // Create a new spreadsheet for the report
-  const spreadsheet = await sheets.spreadsheets.create({
-    requestBody: {
-      properties: {
-        title: `Cardiac Exam - ${reportData.patient.patientId} - ${reportData.patient.date}`
-      },
-      sheets: [{
+  let spreadsheetId: string;
+  let sheetId: number;
+
+  if (existingSpreadsheetId) {
+    // Use existing spreadsheet
+    spreadsheetId = existingSpreadsheetId;
+    
+    // Get the sheet info
+    const spreadsheet = await sheets.spreadsheets.get({
+      spreadsheetId
+    });
+    
+    sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
+    
+    // Append new data row
+    const dataRow = createDataRow(reportData);
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'Exam Records!A:A',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [dataRow]
+      }
+    });
+  } else {
+    // Create a new spreadsheet
+    const spreadsheet = await sheets.spreadsheets.create({
+      requestBody: {
         properties: {
-          title: 'Exam Report'
-        }
-      }]
-    }
-  });
-
-  const spreadsheetId = spreadsheet.data.spreadsheetId;
-  if (!spreadsheetId) {
-    throw new Error('Failed to create spreadsheet');
-  }
-
-  // Get the actual sheet ID from the created spreadsheet
-  const sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId;
-  if (sheetId === undefined) {
-    throw new Error('Failed to get sheet ID');
-  }
-
-  // Prepare data rows
-  const rows: any[][] = [
-    ['Cardiac Ultrasound Examination Report'],
-    [''],
-    ['Patient Information'],
-    ['Date', reportData.patient.date],
-    ['Physician', reportData.patient.physician],
-    ['Patient ID', reportData.patient.patientId],
-    ['Bed Number', reportData.patient.bedNumber],
-    ['Purposes', reportData.patient.purposes?.join(', ') || ''],
-    [''],
-    ['PLAX Measurements'],
-    ['AV/MV Structure', reportData.plax.avMvStructure || ''],
-    ['Pericardial Effusion', reportData.plax.pericardialEffusion || ''],
-    ['Aortic Root', reportData.plax.aorticRoot || ''],
-    ['LA', reportData.plax.la || ''],
-    ['LVOT', reportData.plax.lvot || ''],
-    ['IVS', reportData.plax.ivs || ''],
-    ['LVESd', reportData.plax.lvesd || ''],
-    ['LVPW', reportData.plax.lvpw || ''],
-    ['LVEDd', reportData.plax.lvedd || ''],
-    ['MR', reportData.plax.mr || ''],
-    ['MS', reportData.plax.ms || ''],
-    ['AR', reportData.plax.ar || ''],
-    ['AS', reportData.plax.as || ''],
-    [''],
-    ['PSAX Measurements'],
-    ['AV Status', reportData.psax.avStatus || ''],
-    ['MV Status', reportData.psax.mvStatus || ''],
-    ['LV Status', reportData.psax.lvStatus || ''],
-    ['RVOT Status', reportData.psax.rvotStatus || ''],
-    ['LV FS%', reportData.psax.lvFS || ''],
-    ['LV FS Level', reportData.psax.lvFSLevel || ''],
-    ['PV Color', reportData.psax.pvColor || ''],
-    ['TV Color', reportData.psax.tvColor || ''],
-    ['AV Color', reportData.psax.avColor || ''],
-    ['TR Vmax', reportData.psax.trVmax || ''],
-    ['RVSP', reportData.psax.rvsp || ''],
-    [''],
-    ['A4C Measurements'],
-    ['LV Size', reportData.a4c.lvSize || ''],
-    ['LV Contraction', reportData.a4c.lvContraction || ''],
-    ['Simpson EF', reportData.a4c.simpsonEF || ''],
-    ['RV Size', reportData.a4c.rvSize || ''],
-    ['RV Contraction', reportData.a4c.rvContraction || ''],
-    ['TAPSE', reportData.a4c.tapse || ''],
-    ['Septal Motion', reportData.a4c.septalMotion || ''],
-    ['MS', reportData.a4c.ms || ''],
-    ['MR', reportData.a4c.mr || ''],
-    ['TR', reportData.a4c.tr || ''],
-    ['MV E', reportData.a4c.mvE || ''],
-    ['MV A', reportData.a4c.mvA || ''],
-    ['Decel Time', reportData.a4c.decelTime || ''],
-    ['TR Vmax', reportData.a4c.trVmax || ''],
-    ['RVSP', reportData.a4c.rvsp || ''],
-    ['TDI Septal', reportData.a4c.tdiSept || ''],
-    ['TDI Lateral', reportData.a4c.tdiLat || ''],
-    ['E/e\' Ratio', reportData.a4c.eRatio || ''],
-    [''],
-    ['A2C/A3C/A5C Measurements'],
-    ['LV Wall Motion', reportData.a2c.lvWallMotion || ''],
-    ['AV/LVOT Structure', reportData.a2c.avLvotStructure || ''],
-    ['LVOT Diameter', reportData.a2c.lvotDiameter || ''],
-    ['MR', reportData.a2c.mr || ''],
-    ['AR', reportData.a2c.ar || ''],
-    ['MS', reportData.a2c.ms || ''],
-    ['AS', reportData.a2c.as || ''],
-    ['AV Vmax', reportData.a2c.avVmax || ''],
-    ['AV Mean PG', reportData.a2c.avMeanPG || ''],
-    ['AVA', reportData.a2c.avAVA || ''],
-    [''],
-    ['Subcostal Measurements'],
-    ['ASD', reportData.subcostal.asd || ''],
-    ['VSD', reportData.subcostal.vsd || ''],
-    ['Pericardial Effusion', reportData.subcostal.pericardialEffusion || ''],
-    ['IVC Diameter', reportData.subcostal.ivcDiameter || ''],
-    ['IVC Collapse Ratio', reportData.subcostal.ivcCollapseRatio || ''],
-    ['Volume Status', reportData.subcostal.volumeStatus || ''],
-    ['RA/IVC Flow', reportData.subcostal.raIvcFlow || ''],
-    [''],
-    ['Summary'],
-    ['LV Function', reportData.summary.lvFunction || ''],
-    ['EF', reportData.summary.ef || ''],
-    ['FS', reportData.summary.fs || ''],
-    ['RV Function', reportData.summary.rvFunction || ''],
-    ['TAPSE', reportData.summary.tapse || ''],
-    ['Valvular', reportData.summary.valvular || ''],
-    ['ASD/VSD', reportData.summary.asdVsd || ''],
-    ['Aorta/LA', reportData.summary.aorta || ''],
-    ['Pericardium', reportData.summary.pericardium || ''],
-    ['IVC/Volume', reportData.summary.ivcVolume || ''],
-    ['Notes', reportData.summary.notes || '']
-  ];
-
-  // Write data to the spreadsheet
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: 'Exam Report!A1',
-    valueInputOption: 'RAW',
-    requestBody: {
-      values: rows
-    }
-  });
-
-  // Format the header row
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          repeatCell: {
-            range: {
-              sheetId: sheetId,
-              startRowIndex: 0,
-              endRowIndex: 1
-            },
-            cell: {
-              userEnteredFormat: {
-                textFormat: {
-                  bold: true,
-                  fontSize: 14
-                }
-              }
-            },
-            fields: 'userEnteredFormat(textFormat)'
+          title: `Cardiac Exam Records`
+        },
+        sheets: [{
+          properties: {
+            title: 'Exam Records'
           }
-        }
-      ]
+        }]
+      }
+    });
+
+    spreadsheetId = spreadsheet.data.spreadsheetId!;
+    if (!spreadsheetId) {
+      throw new Error('Failed to create spreadsheet');
     }
-  });
+
+    sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
+
+    // Write header row and first data row
+    const headerRow = createHeaderRow();
+    const dataRow = createDataRow(reportData);
+    
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Exam Records!A1',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [headerRow, dataRow]
+      }
+    });
+
+    // Format the header row (bold, frozen)
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId: sheetId,
+                startRowIndex: 0,
+                endRowIndex: 1
+              },
+              cell: {
+                userEnteredFormat: {
+                  textFormat: {
+                    bold: true,
+                    fontSize: 11
+                  },
+                  backgroundColor: {
+                    red: 0.9,
+                    green: 0.9,
+                    blue: 0.9
+                  }
+                }
+              },
+              fields: 'userEnteredFormat(textFormat,backgroundColor)'
+            }
+          },
+          {
+            updateSheetProperties: {
+              properties: {
+                sheetId: sheetId,
+                gridProperties: {
+                  frozenRowCount: 1
+                }
+              },
+              fields: 'gridProperties.frozenRowCount'
+            }
+          }
+        ]
+      }
+    });
+  }
 
   return {
     spreadsheetId,
