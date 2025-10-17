@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ExamPage() {
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState('plax');
+  const [currentStep, setCurrentStep] = useState('plax-2d');
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 
   // Patient info state
@@ -105,9 +105,17 @@ export default function ExamPage() {
   });
 
   const baseSteps = [
-    { id: 'plax', label: 'PLAX', shortLabel: 'PLAX' },
-    { id: 'psax', label: 'PSAX', shortLabel: 'PSAX' },
-    { id: 'a4c', label: 'A4C', shortLabel: 'A4C' },
+    { id: 'plax-2d', label: 'PLAX - 2D', shortLabel: 'P2D' },
+    { id: 'plax-mmode', label: 'PLAX - M-mode', shortLabel: 'PMM' },
+    { id: 'plax-color', label: 'PLAX - Color', shortLabel: 'PC' },
+    { id: 'plax-doppler', label: 'PLAX - Doppler', shortLabel: 'PD' },
+    { id: 'psax-2d', label: 'PSAX - 2D', shortLabel: 'S2D' },
+    { id: 'psax-mmode', label: 'PSAX - M-mode', shortLabel: 'SMM' },
+    { id: 'psax-color', label: 'PSAX - Color', shortLabel: 'SC' },
+    { id: 'psax-doppler', label: 'PSAX - Doppler', shortLabel: 'SD' },
+    { id: 'a4c-2d', label: 'A4C - 2D', shortLabel: 'A2D' },
+    { id: 'a4c-color', label: 'A4C - Color', shortLabel: 'AC' },
+    { id: 'a4c-doppler', label: 'A4C - Doppler', shortLabel: 'AD' },
     { id: 'a2c', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
     { id: 'subcostal', label: 'Subcostal', shortLabel: 'Sub' },
   ];
@@ -254,20 +262,15 @@ export default function ExamPage() {
   }, [currentStep, plaxData, psaxData, a4cData]);
 
   const getViewColor = (stepId: string) => {
-    const colors: Record<string, string> = {
-      'plax': 'bg-[#0B5394]',
-      'psax': 'bg-[#1155CC]',
-      'a4c': 'bg-[#0B8043]',
-      'a2c': 'bg-[#B45F06]',
-      'subcostal': 'bg-[#741B47]',
-      'summary': 'bg-[#34A853]'
-    };
+    if (stepId.startsWith('plax-')) return 'bg-[#0B5394]';
+    if (stepId.startsWith('psax-')) return 'bg-[#1155CC]';
+    if (stepId.startsWith('a4c-')) return 'bg-[#0B8043]';
+    if (stepId === 'a2c') return 'bg-[#B45F06]';
+    if (stepId === 'subcostal') return 'bg-[#741B47]';
+    if (stepId.startsWith('valve-')) return 'bg-[#E67C73]';
+    if (stepId === 'summary') return 'bg-[#34A853]';
     
-    if (stepId.startsWith('valve-')) {
-      return 'bg-[#E67C73]';
-    }
-    
-    return colors[stepId] || 'bg-primary';
+    return 'bg-primary';
   };
 
   const getViewTitle = (stepId: string) => {
@@ -277,9 +280,17 @@ export default function ExamPage() {
     }
     
     const titles: Record<string, string> = {
-      'plax': 'Parasternal Long Axis (PLAX)',
-      'psax': 'Parasternal Short Axis (PSAX)',
-      'a4c': 'Apical 4 Chamber (A4C)',
+      'plax-2d': 'PLAX - 2D Assessment',
+      'plax-mmode': 'PLAX - M-mode',
+      'plax-color': 'PLAX - Color Doppler',
+      'plax-doppler': 'PLAX - Doppler',
+      'psax-2d': 'PSAX - 2D Assessment',
+      'psax-mmode': 'PSAX - M-mode',
+      'psax-color': 'PSAX - Color Doppler',
+      'psax-doppler': 'PSAX - Doppler',
+      'a4c-2d': 'A4C - 2D Assessment',
+      'a4c-color': 'A4C - Color Doppler',
+      'a4c-doppler': 'A4C - Doppler',
       'a2c': 'Apical 2/3/5 Chamber (A2C/A3C/A5C)',
       'subcostal': 'Subcostal View',
       'summary': 'Summary & Impression'
@@ -300,28 +311,43 @@ export default function ExamPage() {
       );
     }
 
+    // PLAX substeps
+    if (currentStep.startsWith('plax-')) {
+      const substep = currentStep.replace('plax-', '') as '2d' | 'mmode' | 'color' | 'doppler';
+      return (
+        <PLAXView
+          data={plaxData}
+          onChange={(updates) => setPlaxData({ ...plaxData, ...updates })}
+          substep={substep}
+        />
+      );
+    }
+
+    // PSAX substeps
+    if (currentStep.startsWith('psax-')) {
+      const substep = currentStep.replace('psax-', '') as '2d' | 'mmode' | 'color' | 'doppler';
+      return (
+        <PSAXView
+          data={psaxData}
+          onChange={(updates) => setPsaxData({ ...psaxData, ...updates })}
+          substep={substep}
+        />
+      );
+    }
+
+    // A4C substeps
+    if (currentStep.startsWith('a4c-')) {
+      const substep = currentStep.replace('a4c-', '') as '2d' | 'color' | 'doppler';
+      return (
+        <A4CView
+          data={a4cData}
+          onChange={(updates) => setA4cData({ ...a4cData, ...updates })}
+          substep={substep}
+        />
+      );
+    }
+
     switch (currentStep) {
-      case 'plax':
-        return (
-          <PLAXView
-            data={plaxData}
-            onChange={(updates) => setPlaxData({ ...plaxData, ...updates })}
-          />
-        );
-      case 'psax':
-        return (
-          <PSAXView
-            data={psaxData}
-            onChange={(updates) => setPsaxData({ ...psaxData, ...updates })}
-          />
-        );
-      case 'a4c':
-        return (
-          <A4CView
-            data={a4cData}
-            onChange={(updates) => setA4cData({ ...a4cData, ...updates })}
-          />
-        );
       case 'a2c':
       case 'subcostal':
         return (
