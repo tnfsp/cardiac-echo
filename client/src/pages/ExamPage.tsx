@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Copy, Upload } from "lucide-react";
 import StepProgress from "@/components/StepProgress";
 import PatientHeader from "@/components/PatientHeader";
 import PLAXView from "@/components/PLAXView";
@@ -234,8 +234,108 @@ export default function ExamPage() {
     }));
   };
 
-  const handleGenerateReport = () => {
-    console.log('Generating report with data:', {
+  const generateReportText = () => {
+    const purposeOptions = [
+      { id: 'preop', label: '術前 (Pre-op)' },
+      { id: 'postop', label: '術後 (Post-op)' },
+      { id: 'ecmo', label: 'ECMO' },
+      { id: 'valve', label: 'Valve/LV評估' }
+    ];
+    
+    const purposeLabels = patientData.purposes.map(p => {
+      const option = purposeOptions.find(opt => opt.id === p);
+      return option?.label || p;
+    }).join(', ');
+
+    let report = `=== 心臟超音波檢查報告 ===\n\n`;
+    report += `【患者資料】\n`;
+    report += `日期: ${patientData.date}\n`;
+    report += `檢查醫師: ${patientData.physician}\n`;
+    report += `病歷號: ${patientData.patientId}\n`;
+    report += `床號: ${patientData.bedNumber}\n`;
+    if (purposeLabels) report += `目的: ${purposeLabels}\n`;
+    report += `\n`;
+
+    report += `【檢查總結】\n`;
+    if (summaryData.lvFunction || summaryData.ef || summaryData.fs) {
+      report += `LV Function: ${summaryData.lvFunction}`;
+      if (summaryData.ef) report += `, EF: ${summaryData.ef}%`;
+      if (summaryData.fs) report += `, FS: ${summaryData.fs}%`;
+      report += `\n`;
+    }
+    if (summaryData.rvFunction || summaryData.tapse) {
+      report += `RV Function: ${summaryData.rvFunction}`;
+      if (summaryData.tapse) report += `, TAPSE: ${summaryData.tapse}mm`;
+      report += `\n`;
+    }
+    if (summaryData.valvular) report += `Valvular: ${summaryData.valvular}\n`;
+    if (summaryData.asdVsd) report += `ASD/VSD: ${summaryData.asdVsd}\n`;
+    if (summaryData.aorta) report += `Aorta/LA: ${summaryData.aorta}\n`;
+    if (summaryData.pericardium) report += `Pericardium: ${summaryData.pericardium}\n`;
+    if (summaryData.conclusion) {
+      report += `\n【結論】\n${summaryData.conclusion}\n`;
+    }
+
+    report += `\n【詳細測量】\n`;
+    
+    // PLAX measurements
+    if (plaxData.aorticRoot || plaxData.la || plaxData.lvot || plaxData.ivs || plaxData.lvesd || plaxData.lvpw || plaxData.lvedd) {
+      report += `\nPLAX:\n`;
+      if (plaxData.aorticRoot) report += `  Aortic Root: ${plaxData.aorticRoot}mm\n`;
+      if (plaxData.la) report += `  LA: ${plaxData.la}mm\n`;
+      if (plaxData.lvot) report += `  LVOT: ${plaxData.lvot}mm\n`;
+      if (plaxData.ivs) report += `  IVS: ${plaxData.ivs}mm\n`;
+      if (plaxData.lvesd) report += `  LVESd: ${plaxData.lvesd}mm\n`;
+      if (plaxData.lvpw) report += `  LVPW: ${plaxData.lvpw}mm\n`;
+      if (plaxData.lvedd) report += `  LVEDd: ${plaxData.lvedd}mm\n`;
+      if (plaxData.pericardialEffusion && plaxData.pericardialEffusion !== 'none') {
+        report += `  Pericardial Effusion: ${plaxData.pericardialEffusion}\n`;
+      }
+    }
+
+    // PSAX measurements
+    if (psaxData.rvotDiameter || psaxData.paDiameter || psaxData.lvFS) {
+      report += `\nPSAX:\n`;
+      if (psaxData.rvotDiameter) report += `  RVOT: ${psaxData.rvotDiameter}mm\n`;
+      if (psaxData.paDiameter) report += `  PA: ${psaxData.paDiameter}mm\n`;
+      if (psaxData.lvFS) report += `  LV FS: ${psaxData.lvFS}%\n`;
+      if (psaxData.trVmax) report += `  TR Vmax: ${psaxData.trVmax}m/s\n`;
+      if (psaxData.rvsp) report += `  RVSP: ${psaxData.rvsp}mmHg\n`;
+    }
+
+    // A4C measurements
+    if (a4cData.simpsonEF || a4cData.tapse || a4cData.mvE || a4cData.mvA || a4cData.eRatio) {
+      report += `\nA4C:\n`;
+      if (a4cData.simpsonEF) report += `  Simpson EF: ${a4cData.simpsonEF}%\n`;
+      if (a4cData.tapse) report += `  TAPSE: ${a4cData.tapse}mm\n`;
+      if (a4cData.mvE) report += `  MV E: ${a4cData.mvE}cm/s\n`;
+      if (a4cData.mvA) report += `  MV A: ${a4cData.mvA}cm/s\n`;
+      if (a4cData.eRatio) report += `  E/e': ${a4cData.eRatio}\n`;
+    }
+
+    report += `\n--- End of Report ---`;
+    return report;
+  };
+
+  const handleCopyReport = async () => {
+    try {
+      const reportText = generateReportText();
+      await navigator.clipboard.writeText(reportText);
+      toast({
+        title: "報告已複製",
+        description: "完整報告已複製到剪貼簿，可以貼到LINE或其他地方。",
+      });
+    } catch (error) {
+      toast({
+        title: "複製失敗",
+        description: "無法複製報告到剪貼簿，請稍後再試。",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUploadToCloud = () => {
+    console.log('Uploading report to Google Sheets:', {
       patient: patientData,
       plax: plaxData,
       psax: psaxData,
@@ -245,8 +345,8 @@ export default function ExamPage() {
     });
 
     toast({
-      title: "Report Generated",
-      description: "Examination report has been generated and uploaded to Google Sheets.",
+      title: "上傳成功",
+      description: "檢查報告已上傳到Google Sheets雲端。",
     });
   };
 
@@ -460,14 +560,25 @@ export default function ExamPage() {
           </Button>
 
           {currentStep === 'summary' ? (
-            <Button
-              onClick={handleGenerateReport}
-              data-testid="button-generate-report"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary min-h-11"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Generate Report
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleCopyReport}
+                data-testid="button-copy-report"
+                variant="outline"
+                className="min-h-11"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                複製報告
+              </Button>
+              <Button
+                onClick={handleUploadToCloud}
+                data-testid="button-upload-cloud"
+                className="min-h-11"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                上傳雲端
+              </Button>
+            </div>
           ) : (
             <Button
               onClick={handleNext}
