@@ -145,11 +145,15 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (October 17, 2025)
 
 ### UI/UX Improvements
-- **Full-screen layout**: Each examination view now occupies the full viewport without scrolling
-- **Color-coded headers**: Visual differentiation for each view with medical-themed colors:
-  - PLAX: Medical Blue (#0B5394)
-  - PSAX: Lighter Blue (#1155CC)
-  - A4C: Approval Green (#0B8043)
+- **Single-block full-screen navigation**: Each examination section (2D Assessment, M-mode, Color Doppler, Doppler) now displays as an independent full-screen page
+- **Substep-based workflow**: 
+  - PLAX divided into: 2D Assessment → M-mode → Color Doppler → Doppler (4 pages)
+  - PSAX divided into: 2D Assessment → M-mode → Color Doppler → Doppler (4 pages)
+  - A4C divided into: 2D Assessment → Color Doppler → Doppler (3 pages)
+- **Color-coded headers**: Each substep displays VIEW name and section (e.g., "PLAX - 2D Assessment"):
+  - PLAX substeps: Medical Blue (#0B5394)
+  - PSAX substeps: Lighter Blue (#1155CC)
+  - A4C substeps: Approval Green (#0B8043)
   - A2C/A3C/A5C: Orange (#B45F06)
   - Subcostal: Purple (#741B47)
   - Valve Details: Coral Red (#E67C73)
@@ -166,10 +170,27 @@ Preferred communication style: Simple, everyday language.
 - **Aorta/LA**: Combines aortic root and LA measurements from PLAX
 - **Pericardium**: Auto-populates pericardial effusion status
 
+### Form Input Improvements
+- **PSAX Color Doppler dropdowns**: Changed PV/TV/AV color from text inputs to dropdown selects:
+  - PV color: Normal | PS | PR
+  - TV color: Normal | TR
+  - AV color: Normal | AS | AR
+
 ### Implemented Views
-1. **PLAX** (Parasternal Long Axis): Complete with 2D assessment, M-mode measurements, valve assessment
-2. **PSAX** (Parasternal Short Axis): AV/MV structure, LV/RVOT assessment, color Doppler, TR measurements
-3. **A4C** (Apical 4 Chamber): LV/RV size and function, Simpson EF, TAPSE, valve assessment, diastolic function
+1. **PLAX** (Parasternal Long Axis): 
+   - 2D Assessment: AV/MV structure, pericardial effusion
+   - M-mode: Aortic root, LA, LVOT, IVS, LVESd, LVPW, LVEDd
+   - Color Doppler: MR, MS severity
+   - Doppler: AR, AS severity
+2. **PSAX** (Parasternal Short Axis):
+   - 2D Assessment: AV structure, MV fish-mouth, LV papillary level, RVOT status, measurements
+   - M-mode: LV FS% and level
+   - Color Doppler: PV/TV/AV color dropdowns
+   - Doppler: TR CW Vmax, RVSP
+3. **A4C** (Apical 4 Chamber):
+   - 2D Assessment: LV/RV size and contraction, Simpson EF, TAPSE, septal motion
+   - Color Doppler: MS, MR, TR severity with measurements
+   - Doppler: MV inflow, TR measurements, TDI, E/e' ratio
 4. **Valve Details** (AS/AR/MS/MR): Condition-specific detailed measurements:
    - AS: LVOT VTI, AV velocities, gradients, AVA
    - AR: VC, Vmax, PHT
