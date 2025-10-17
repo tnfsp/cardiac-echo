@@ -113,15 +113,14 @@ export default function PLAXView({ data, onChange, substep }: PLAXViewProps) {
               <CardTitle className="text-xl">M-mode - LV</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <MeasurementInput
-                label="IVS"
-                value={data.ivs}
-                onChange={(value) => onChange({ ivs: value })}
-                unit="mm"
-                testId="input-ivs"
-              />
-
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <MeasurementInput
+                  label="IVS"
+                  value={data.ivs}
+                  onChange={(value) => onChange({ ivs: value })}
+                  unit="mm"
+                  testId="input-ivs"
+                />
                 <MeasurementInput
                   label="LVESd"
                   value={data.lvesd}
@@ -136,14 +135,15 @@ export default function PLAXView({ data, onChange, substep }: PLAXViewProps) {
                   unit="mm"
                   testId="input-lvpw"
                 />
-                <MeasurementInput
-                  label="LVEDd"
-                  value={data.lvedd}
-                  onChange={(value) => onChange({ lvedd: value })}
-                  unit="mm"
-                  testId="input-lvedd"
-                />
               </div>
+
+              <MeasurementInput
+                label="LVEDd"
+                value={data.lvedd}
+                onChange={(value) => onChange({ lvedd: value })}
+                unit="mm"
+                testId="input-lvedd"
+              />
             </CardContent>
           </Card>
         )}
