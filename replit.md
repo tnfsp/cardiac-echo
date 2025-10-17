@@ -144,6 +144,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 17, 2025)
 
+### Google Sheets Integration Enhancement
+- **Unified Spreadsheet Storage**: Changed from creating separate spreadsheets per examination to unified table format
+- **Persistent Tracking**: Spreadsheet ID saved to browser localStorage (`cardiacExamSpreadsheetId`)
+- **Table Structure**: First upload creates "Cardiac Exam Records" spreadsheet with 70+ column header row
+- **Automatic Append**: Subsequent uploads add new examination as row to existing spreadsheet
+- **Smart Formatting**: Header row formatted with bold text, gray background, and frozen for scrolling
+- **Contextual Feedback**: Different toast messages for first-time creation vs. appending records
+
 ### Major System Refactoring
 - **Comprehensive workflow expansion**: System now supports 29+ examination steps (up from 12 base steps)
 - **Granular page splitting**: Each measurement group displays as an independent full-screen page with no scrolling
@@ -210,9 +218,13 @@ Preferred communication style: Simple, everyday language.
      - Includes patient info, summary findings, and detailed measurements
      - Formatted for easy pasting into LINE, messaging apps, or medical records
      - Shows success toast notification upon copy
-  2. **上傳雲端 (Upload to Cloud)**: Uploads examination data to Google Sheets
-     - Sends structured data for cloud storage and analysis
-     - Shows success toast notification upon upload
+  2. **上傳雲端 (Upload to Cloud)**: Uploads examination data to unified Google Sheets table
+     - **First Upload**: Creates new Google Spreadsheet titled "Cardiac Exam Records" with header row (70+ columns)
+     - **Subsequent Uploads**: Appends new examination as row to existing spreadsheet
+     - **Persistent Storage**: Spreadsheet ID saved to browser localStorage for automatic reuse
+     - **Table Format**: Each examination becomes one row with all measurements
+     - **Header Formatting**: Bold text, gray background, frozen row for easy scrolling
+     - Shows contextual success toast (first-time creation vs. append notification)
 - Both buttons available on Summary page after completing examination
 
 ### Implemented Views
