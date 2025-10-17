@@ -13,6 +13,7 @@ import SummaryView from "@/components/SummaryView";
 import ViewHeader from "@/components/ViewHeader";
 import ValveDetailView from "@/components/ValveDetailView";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ExamPage() {
   const { toast } = useToast();
@@ -366,10 +367,8 @@ export default function ExamPage() {
     }
 
     // PSAX measurements
-    if (psaxData.rvotDiameter || psaxData.paDiameter || psaxData.lvFS) {
+    if (psaxData.lvFS || psaxData.trVmax || psaxData.rvsp) {
       report += `\nPSAX:\n`;
-      if (psaxData.rvotDiameter) report += `  RVOT: ${psaxData.rvotDiameter}mm\n`;
-      if (psaxData.paDiameter) report += `  PA: ${psaxData.paDiameter}mm\n`;
       if (psaxData.lvFS) report += `  LV FS: ${psaxData.lvFS}%\n`;
       if (psaxData.trVmax) report += `  TR Vmax: ${psaxData.trVmax}m/s\n`;
       if (psaxData.rvsp) report += `  RVSP: ${psaxData.rvsp}mmHg\n`;
@@ -406,20 +405,39 @@ export default function ExamPage() {
     }
   };
 
-  const handleUploadToCloud = () => {
-    console.log('Uploading report to Google Sheets:', {
-      patient: patientData,
-      plax: plaxData,
-      psax: psaxData,
-      a4c: a4cData,
-      valveDetails: valveDetailData,
-      summary: summaryData
-    });
+  const handleUploadToCloud = async () => {
+    try {
+      const reportData = {
+        patient: patientData,
+        plax: plaxData,
+        psax: psaxData,
+        a4c: a4cData,
+        a2c: a2cData,
+        subcostal: subcostalData,
+        asdVsdDetail: asdVsdDetailData,
+        valveDetails: valveDetailData,
+        summary: summaryData
+      };
 
-    toast({
-      title: "上傳成功",
-      description: "檢查報告已上傳到Google Sheets雲端。",
-    });
+      const response = await apiRequest('POST', '/api/upload-report', reportData);
+      const result = await response.json();
+
+      if (result.spreadsheetUrl) {
+        toast({
+          title: "上傳成功",
+          description: "檢查報告已上傳到Google Sheets雲端。",
+        });
+        // Optionally open the spreadsheet
+        // window.open(result.spreadsheetUrl, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast({
+        title: "上傳失敗",
+        description: error.message || "無法上傳報告到Google Sheets，請稍後再試。",
+        variant: "destructive"
+      });
+    }
   };
 
   // Auto-populate summary based on collected data
