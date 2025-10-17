@@ -144,46 +144,61 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 17, 2025)
 
+### Major System Refactoring
+- **Comprehensive workflow expansion**: System now supports 29+ examination steps (up from 12 base steps)
+- **Granular page splitting**: Each measurement group displays as an independent full-screen page with no scrolling
+- **Fully implemented A2C/A3C/A5C and Subcostal views**: No longer placeholders
+- **Conditional ASD/VSD detail assessment**: Automatically appears when septal defects detected
+
 ### UI/UX Improvements
-- **Single-block full-screen navigation**: Each examination section (2D Assessment, M-mode, Color Doppler, Doppler) now displays as an independent full-screen page
-- **Substep-based workflow**: 
-  - PLAX divided into: 2D Assessment → M-mode → Color Doppler → Doppler (4 pages)
-  - PSAX divided into: 2D Assessment → M-mode → Color Doppler → Doppler (4 pages)
-  - A4C divided into: 2D Assessment → Color Doppler → Doppler (3 pages)
-- **Color-coded headers**: Each substep displays VIEW name and section (e.g., "PLAX - 2D Assessment"):
+- **Single-block full-screen navigation**: Each examination section displays as an independent full-screen page
+- **Enhanced substep-based workflow**: 
+  - **PLAX**: 6 pages (2D → M-mode Aortic/LA → M-mode LVOT → M-mode LV → Color → Doppler)
+  - **PSAX**: 4 pages (2D → M-mode → Color → Doppler)
+  - **A4C**: 6 pages (2D LV → 2D RV → Color → Doppler MV → Doppler TR → Doppler TDI)
+  - **A2C/A3C/A5C**: 3 pages (2D → Color → Doppler)
+  - **Subcostal**: 2 pages (ASD/VSD/Pericardium → IVC Assessment)
+- **Color-coded headers**: Each substep displays VIEW name and section:
   - PLAX substeps: Medical Blue (#0B5394)
   - PSAX substeps: Lighter Blue (#1155CC)
   - A4C substeps: Approval Green (#0B8043)
   - A2C/A3C/A5C: Orange (#B45F06)
   - Subcostal: Purple (#741B47)
+  - ASD/VSD Detail: Deep Purple (#6A1B9A)
   - Valve Details: Coral Red (#E67C73)
   - Summary: Success Green (#34A853)
-- **Collapsible Patient Header**: 
+- **Auto-collapsing Patient Header**: 
   - Header automatically collapses after all required fields are filled (date, physician, patient ID, bed number)
   - Collapsed view shows patient info in single line with edit button to expand
   - Saves screen space during examination workflow
 - **Simplified Navigation Bar**: 
-  - Top navigation shows only main VIEW labels (PLAX, PSAX, A4C, A2C/A3C/A5C, Subcostal, Valve Details, Summary)
-  - Substeps (2D, M-mode, Color, Doppler) hidden from top bar to reduce clutter
+  - Top navigation shows only main VIEW labels (PLAX, PSAX, A4C, A2C/A3C/A5C, Subcostal, ASD/VSD Detail, Valve Details, Summary)
+  - Substeps hidden from top bar to reduce clutter
   - Clicking main view navigates to first substep of that view
   - Current main view highlighted even when on substeps
 
 ### Smart Workflow Logic
 - **Conditional valve assessment**: System automatically inserts detailed valve assessment pages (AS, AR, MS, MR) when corresponding severity is selected as Moderate or Severe
+- **Conditional ASD/VSD detail**: Automatically adds detailed septal defect assessment when ASD or VSD defect is detected in Subcostal view
 - **Dynamic step progression**: Navigation adapts based on clinical findings, ensuring thorough examination
 
 ### Auto-populated Summary
 - **LV Function**: Auto-filled from A4C contraction status and Simpson EF
 - **RV Function**: Auto-filled from RV contraction status and TAPSE measurement
-- **Valvular Assessment**: Aggregates all valve findings (MR, MS, AR, AS, TR) from multiple views
+- **Valvular Assessment**: Aggregates all valve findings (MR, MS, AR, AS, TR) from PLAX, A4C, and A2C views
+- **ASD/VSD**: Automatically populated when septal defects detected in Subcostal view
 - **Aorta/LA**: Combines aortic root and LA measurements from PLAX
-- **Pericardium**: Auto-populates pericardial effusion status
+- **Pericardium**: Auto-populates pericardial effusion status from PLAX and Subcostal views
+- **IVC/Volume Status**: Includes IVC measurements and volume assessment from Subcostal view
 
 ### Form Input Improvements
 - **PSAX Color Doppler dropdowns**: Changed PV/TV/AV color from text inputs to dropdown selects:
   - PV color: Normal | PS | PR
   - TV color: Normal | TR
   - AV color: Normal | AS | AR
+- **A4C Color Doppler simplified**: Removed EROA/VC input fields from Color Doppler view
+  - Detailed measurements moved to dedicated valve detail pages
+  - Color view now focuses only on severity assessment
 
 ### Report Generation Features
 - **Dual Report Functions**:
@@ -197,27 +212,50 @@ Preferred communication style: Simple, everyday language.
 - Both buttons available on Summary page after completing examination
 
 ### Implemented Views
-1. **PLAX** (Parasternal Long Axis): 
+1. **PLAX** (Parasternal Long Axis) - 6 pages:
    - 2D Assessment: AV/MV structure, pericardial effusion
-   - M-mode: Aortic root, LA, LVOT, IVS, LVESd, LVPW, LVEDd
+   - M-mode Aortic/LA: Aortic root at diastolic, LA measurements
+   - M-mode LVOT: LVOT diameter
+   - M-mode LV: IVS, LVESd, LVPW, LVEDd
    - Color Doppler: MR, MS severity
    - Doppler: AR, AS severity
-2. **PSAX** (Parasternal Short Axis):
+
+2. **PSAX** (Parasternal Short Axis) - 4 pages:
    - 2D Assessment: AV structure, MV fish-mouth, LV papillary level, RVOT status, measurements
    - M-mode: LV FS% and level
    - Color Doppler: PV/TV/AV color dropdowns
    - Doppler: TR CW Vmax, RVSP
-3. **A4C** (Apical 4 Chamber):
-   - 2D Assessment: LV/RV size and contraction, Simpson EF, TAPSE, septal motion
-   - Color Doppler: MS, MR, TR severity with measurements
-   - Doppler: MV inflow, TR measurements, TDI, E/e' ratio
-4. **Valve Details** (AS/AR/MS/MR): Condition-specific detailed measurements:
-   - AS: LVOT VTI, AV velocities, gradients, AVA
-   - AR: VC, Vmax, PHT
-   - MS: Mean PG, PHT, MVA, fish-mouth assessment
-   - MR: VC, PISA, EROA, pulmonary vein flow
-5. **Summary**: Auto-populated clinical impression with manual override capability
 
-### Pending Views
-- A2C/A3C/A5C: Placeholder (form structure ready)
-- Subcostal: Placeholder (form structure ready)
+3. **A4C** (Apical 4 Chamber) - 6 pages:
+   - 2D LV: LV size, LV contraction, Simpson EF
+   - 2D RV: RV size, RV contraction, TAPSE, septal motion
+   - Color Doppler: MS, MR, TR severity (simplified)
+   - Doppler MV: MV E/A, deceleration time
+   - Doppler TR: TR Vmax, RVSP
+   - Doppler TDI: TDI Septal, TDI Lateral, E/e' ratio
+
+4. **A2C/A3C/A5C** (Apical 2/3/5 Chamber) - 3 pages:
+   - 2D Assessment: LV wall motion (Normal/RWMA/Akinetic), AV/LVOT structure, LVOT diameter
+   - Color Doppler: MR/AR severity, MS/AS severity
+   - Doppler: AV (AS) CW VTI measurements (Vmax, Mean PG, AVA)
+
+5. **Subcostal View** - 2 pages:
+   - ASD/VSD/Pericardium: Interatrial septum assessment, interventricular septum assessment, pericardial effusion
+   - IVC Assessment: IVC diameter, collapse ratio, volume status, RA/IVC flow
+
+6. **ASD/VSD Detail** (Conditional) - 1 page:
+   - RVOT PW: RVOT Vmax, RVOT VTI
+   - RVOT CW PV: PV Vmax, PV VTI
+   - ASD shunt direction and flow velocity
+   - VSD shunt direction and flow velocity
+   - Only appears when ASD or VSD defect detected
+
+7. **Valve Details** (AS/AR/MS/MR - Conditional): Condition-specific detailed measurements:
+   - AS: LVOT PW VTI/Velocity, AV CW VTI (Vmax, Mean PG, AVA)
+   - AR: VC, AV CW (Vmax, AR slope PHT)
+   - MS: CW mean PG/PHT/MVA, MV fish-mouth assessment with MVA
+   - MR: VC, PISA/EROA, CW Vmax/VTI, Pulmonary vein flow (S/D/A waves)
+
+8. **Summary**: Auto-populated clinical impression with manual override capability
+   - Aggregates data from all views
+   - Includes LV/RV function, valvular assessment, ASD/VSD status, aorta/LA, pericardium, IVC/volume status
