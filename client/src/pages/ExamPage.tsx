@@ -132,6 +132,30 @@ export default function ExamPage() {
     { id: 'summary', label: 'Summary', shortLabel: 'Sum' }
   ];
 
+  // Simplified navigation steps (main views only)
+  const getMainSteps = () => {
+    const mainSteps = [
+      { id: 'plax-2d', label: 'PLAX', shortLabel: 'PLAX' },
+      { id: 'psax-2d', label: 'PSAX', shortLabel: 'PSAX' },
+      { id: 'a4c-2d', label: 'A4C', shortLabel: 'A4C' },
+      { id: 'a2c', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
+      { id: 'subcostal', label: 'Subcostal', shortLabel: 'Sub' },
+    ];
+
+    // Add valve details if needed
+    if (valveDetailsToShow.length > 0) {
+      mainSteps.push({
+        id: `valve-${valveDetailsToShow[0].toLowerCase()}`,
+        label: 'Valve Details',
+        shortLabel: 'Valve'
+      });
+    }
+
+    mainSteps.push({ id: 'summary', label: 'Summary', shortLabel: 'Sum' });
+    
+    return mainSteps;
+  };
+
   // Check for valve severity and update valve details to show
   useEffect(() => {
     const newValveDetails: Array<'AS' | 'AR' | 'MS' | 'MR'> = [];
@@ -183,7 +207,22 @@ export default function ExamPage() {
   };
 
   const handleStepClick = (stepId: string) => {
-    setCurrentStep(stepId);
+    // Map main view clicks to their first substep
+    const viewMapping: Record<string, string> = {
+      'plax-2d': 'plax-2d',
+      'psax-2d': 'psax-2d',
+      'a4c-2d': 'a4c-2d',
+      'a2c': 'a2c',
+      'subcostal': 'subcostal',
+      'summary': 'summary'
+    };
+
+    // For valve details, if clicking the main "valve" tab, go to first valve detail
+    if (stepId.startsWith('valve-')) {
+      setCurrentStep(stepId);
+    } else {
+      setCurrentStep(viewMapping[stepId] || stepId);
+    }
   };
 
   const handlePurposeToggle = (purpose: string) => {
@@ -391,7 +430,7 @@ export default function ExamPage() {
 
       <div className="border-b border-border bg-card">
         <StepProgress
-          steps={steps}
+          steps={getMainSteps()}
           currentStep={currentStep}
           completedSteps={completedSteps}
           onStepClick={handleStepClick}

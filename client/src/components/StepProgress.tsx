@@ -15,14 +15,24 @@ interface StepProgressProps {
 }
 
 export default function StepProgress({ steps, currentStep, completedSteps, onStepClick }: StepProgressProps) {
-  const currentIndex = steps.findIndex(s => s.id === currentStep);
+  // Determine which main view tab should be highlighted based on current substep
+  const getCurrentMainView = () => {
+    if (currentStep.startsWith('plax-')) return 'plax-2d';
+    if (currentStep.startsWith('psax-')) return 'psax-2d';
+    if (currentStep.startsWith('a4c-')) return 'a4c-2d';
+    if (currentStep.startsWith('valve-')) return steps.find(s => s.id.startsWith('valve-'))?.id || currentStep;
+    return currentStep;
+  };
+
+  const mainViewId = getCurrentMainView();
+  const currentIndex = steps.findIndex(s => s.id === mainViewId);
 
   return (
     <div className="w-full overflow-x-auto pb-2">
       <div className="flex items-center justify-between min-w-max gap-2 px-4">
         {steps.map((step, index) => {
           const isCompleted = completedSteps.includes(step.id);
-          const isCurrent = step.id === currentStep;
+          const isCurrent = step.id === mainViewId;
           const isPast = index < currentIndex;
 
           return (
