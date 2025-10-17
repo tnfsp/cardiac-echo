@@ -158,6 +158,15 @@ Preferred communication style: Simple, everyday language.
   - Subcostal: Purple (#741B47)
   - Valve Details: Coral Red (#E67C73)
   - Summary: Success Green (#34A853)
+- **Collapsible Patient Header**: 
+  - Header automatically collapses after all required fields are filled (date, physician, patient ID, bed number)
+  - Collapsed view shows patient info in single line with edit button to expand
+  - Saves screen space during examination workflow
+- **Simplified Navigation Bar**: 
+  - Top navigation shows only main VIEW labels (PLAX, PSAX, A4C, A2C/A3C/A5C, Subcostal, Valve Details, Summary)
+  - Substeps (2D, M-mode, Color, Doppler) hidden from top bar to reduce clutter
+  - Clicking main view navigates to first substep of that view
+  - Current main view highlighted even when on substeps
 
 ### Smart Workflow Logic
 - **Conditional valve assessment**: System automatically inserts detailed valve assessment pages (AS, AR, MS, MR) when corresponding severity is selected as Moderate or Severe
@@ -175,6 +184,17 @@ Preferred communication style: Simple, everyday language.
   - PV color: Normal | PS | PR
   - TV color: Normal | TR
   - AV color: Normal | AS | AR
+
+### Report Generation Features
+- **Dual Report Functions**:
+  1. **複製報告 (Copy Report)**: Generates formatted text report and copies to clipboard using Clipboard API
+     - Includes patient info, summary findings, and detailed measurements
+     - Formatted for easy pasting into LINE, messaging apps, or medical records
+     - Shows success toast notification upon copy
+  2. **上傳雲端 (Upload to Cloud)**: Uploads examination data to Google Sheets
+     - Sends structured data for cloud storage and analysis
+     - Shows success toast notification upon upload
+- Both buttons available on Summary page after completing examination
 
 ### Implemented Views
 1. **PLAX** (Parasternal Long Axis): 
