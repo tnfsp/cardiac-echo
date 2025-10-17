@@ -6,6 +6,9 @@ import PatientHeader from "@/components/PatientHeader";
 import PLAXView from "@/components/PLAXView";
 import PSAXView from "@/components/PSAXView";
 import A4CView from "@/components/A4CView";
+import A2CView from "@/components/A2CView";
+import SubcostalView from "@/components/SubcostalView";
+import ASDVSDDetailView from "@/components/ASDVSDDetailView";
 import SummaryView from "@/components/SummaryView";
 import ViewHeader from "@/components/ViewHeader";
 import ValveDetailView from "@/components/ValveDetailView";
@@ -70,10 +73,7 @@ export default function ExamPage() {
     septalMotion: null as string | null,
     ms: 'none',
     mr: 'none',
-    mrEROA: '',
-    mrVC: '',
     tr: 'none',
-    trVC: '',
     mvE: '',
     mvA: '',
     decelTime: '',
@@ -82,6 +82,41 @@ export default function ExamPage() {
     tdiSept: '',
     tdiLat: '',
     eRatio: ''
+  });
+
+  // A2C data state
+  const [a2cData, setA2cData] = useState({
+    lvWallMotion: null as string | null,
+    avLvotStructure: null as string | null,
+    lvotDiameter: '',
+    mrAr: 'none',
+    msAs: 'none',
+    avVmax: '',
+    avMeanPG: '',
+    avAVA: ''
+  });
+
+  // Subcostal data state
+  const [subcostalData, setSubcostalData] = useState({
+    asd: null as string | null,
+    vsd: null as string | null,
+    pericardialEffusion: null as string | null,
+    ivcDiameter: '',
+    ivcCollapseRatio: '',
+    volumeStatus: null as string | null,
+    raIvcFlow: null as string | null
+  });
+
+  // ASD/VSD Detail data state
+  const [asdVsdDetailData, setAsdVsdDetailData] = useState({
+    rvotPWVmax: '',
+    rvotPWVTI: '',
+    rvotCWPVVmax: '',
+    rvotCWPVVTI: '',
+    asdShunt: null as string | null,
+    asdFlowVelocity: '',
+    vsdShunt: null as string | null,
+    vsdFlowVelocity: ''
   });
 
   // Valve detail data
@@ -104,21 +139,44 @@ export default function ExamPage() {
     conclusion: ''
   });
 
+  // Track ASD/VSD detail visibility
+  const [showAsdVsdDetail, setShowAsdVsdDetail] = useState(false);
+
   const baseSteps = [
+    // PLAX - 6 pages
     { id: 'plax-2d', label: 'PLAX - 2D', shortLabel: 'P2D' },
-    { id: 'plax-mmode', label: 'PLAX - M-mode', shortLabel: 'PMM' },
+    { id: 'plax-mmode-aortic', label: 'PLAX - M-mode Aortic/LA', shortLabel: 'PMA' },
+    { id: 'plax-mmode-lvot', label: 'PLAX - M-mode LVOT', shortLabel: 'PML' },
+    { id: 'plax-mmode-lv', label: 'PLAX - M-mode LV', shortLabel: 'PMV' },
     { id: 'plax-color', label: 'PLAX - Color', shortLabel: 'PC' },
     { id: 'plax-doppler', label: 'PLAX - Doppler', shortLabel: 'PD' },
+    
+    // PSAX - 4 pages (unchanged)
     { id: 'psax-2d', label: 'PSAX - 2D', shortLabel: 'S2D' },
     { id: 'psax-mmode', label: 'PSAX - M-mode', shortLabel: 'SMM' },
     { id: 'psax-color', label: 'PSAX - Color', shortLabel: 'SC' },
     { id: 'psax-doppler', label: 'PSAX - Doppler', shortLabel: 'SD' },
-    { id: 'a4c-2d', label: 'A4C - 2D', shortLabel: 'A2D' },
+    
+    // A4C - 6 pages
+    { id: 'a4c-2d-lv', label: 'A4C - 2D LV', shortLabel: 'ALV' },
+    { id: 'a4c-2d-rv', label: 'A4C - 2D RV', shortLabel: 'ARV' },
     { id: 'a4c-color', label: 'A4C - Color', shortLabel: 'AC' },
-    { id: 'a4c-doppler', label: 'A4C - Doppler', shortLabel: 'AD' },
-    { id: 'a2c', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
-    { id: 'subcostal', label: 'Subcostal', shortLabel: 'Sub' },
+    { id: 'a4c-doppler-mv', label: 'A4C - Doppler MV', shortLabel: 'ADM' },
+    { id: 'a4c-doppler-tr', label: 'A4C - Doppler TR', shortLabel: 'ADT' },
+    { id: 'a4c-doppler-tdi', label: 'A4C - Doppler TDI', shortLabel: 'ADD' },
+    
+    // A2C - 3 pages
+    { id: 'a2c-2d', label: 'A2C - 2D', shortLabel: 'A2D' },
+    { id: 'a2c-color', label: 'A2C - Color', shortLabel: 'A2C' },
+    { id: 'a2c-doppler', label: 'A2C - Doppler', shortLabel: 'A2P' },
+    
+    // Subcostal - 2 pages
+    { id: 'subcostal-asd-vsd', label: 'Subcostal - ASD/VSD', shortLabel: 'SAV' },
+    { id: 'subcostal-ivc', label: 'Subcostal - IVC', shortLabel: 'SIV' },
   ];
+
+  // Add ASD/VSD detail step if needed
+  const asdVsdStep = showAsdVsdDetail ? [{ id: 'asd-vsd-detail', label: 'ASD/VSD Detail', shortLabel: 'AVD' }] : [];
 
   const valveSteps = valveDetailsToShow.map(valve => ({
     id: `valve-${valve.toLowerCase()}`,
@@ -128,6 +186,7 @@ export default function ExamPage() {
 
   const steps = [
     ...baseSteps,
+    ...asdVsdStep,
     ...valveSteps,
     { id: 'summary', label: 'Summary', shortLabel: 'Sum' }
   ];
@@ -137,10 +196,14 @@ export default function ExamPage() {
     const mainSteps = [
       { id: 'plax-2d', label: 'PLAX', shortLabel: 'PLAX' },
       { id: 'psax-2d', label: 'PSAX', shortLabel: 'PSAX' },
-      { id: 'a4c-2d', label: 'A4C', shortLabel: 'A4C' },
-      { id: 'a2c', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
-      { id: 'subcostal', label: 'Subcostal', shortLabel: 'Sub' },
+      { id: 'a4c-2d-lv', label: 'A4C', shortLabel: 'A4C' },
+      { id: 'a2c-2d', label: 'A2C/A3C/A5C', shortLabel: 'A2C' },
+      { id: 'subcostal-asd-vsd', label: 'Subcostal', shortLabel: 'Sub' },
     ];
+
+    if (showAsdVsdDetail) {
+      mainSteps.push({ id: 'asd-vsd-detail', label: 'ASD/VSD Detail', shortLabel: 'AVD' });
+    }
 
     // Add valve details if needed
     if (valveDetailsToShow.length > 0) {
@@ -188,6 +251,12 @@ export default function ExamPage() {
     setValveDetailsToShow(newValveDetails);
   }, [plaxData, a4cData]);
 
+  // Check for ASD/VSD and update detail view visibility
+  useEffect(() => {
+    const shouldShow = subcostalData.asd === 'defect' || subcostalData.vsd === 'defect';
+    setShowAsdVsdDetail(shouldShow);
+  }, [subcostalData.asd, subcostalData.vsd]);
+
   const currentIndex = steps.findIndex(s => s.id === currentStep);
 
   const handleNext = () => {
@@ -211,9 +280,10 @@ export default function ExamPage() {
     const viewMapping: Record<string, string> = {
       'plax-2d': 'plax-2d',
       'psax-2d': 'psax-2d',
-      'a4c-2d': 'a4c-2d',
-      'a2c': 'a2c',
-      'subcostal': 'subcostal',
+      'a4c-2d-lv': 'a4c-2d-lv',
+      'a2c-2d': 'a2c-2d',
+      'subcostal-asd-vsd': 'subcostal-asd-vsd',
+      'asd-vsd-detail': 'asd-vsd-detail',
       'summary': 'summary'
     };
 
@@ -379,6 +449,11 @@ export default function ExamPage() {
       if (plaxData.ar !== 'none') valvularParts.push(`AR: ${plaxData.ar}`);
       if (plaxData.as !== 'none') valvularParts.push(`AS: ${plaxData.as}`);
       if (a4cData.tr !== 'none') valvularParts.push(`TR: ${a4cData.tr}`);
+      
+      // A2C valve data
+      if (a2cData.mrAr !== 'none') valvularParts.push(`MR/AR: ${a2cData.mrAr}`);
+      if (a2cData.msAs !== 'none') valvularParts.push(`MS/AS: ${a2cData.msAs}`);
+      
       if (valvularParts.length > 0) {
         updates.valvular = valvularParts.join(', ');
       }
@@ -391,21 +466,43 @@ export default function ExamPage() {
         updates.aorta = parts.join(', ');
       }
 
-      // Pericardium
+      // Pericardium and IVC
+      const pericardiumParts = [];
       if (plaxData.pericardialEffusion && plaxData.pericardialEffusion !== 'none') {
-        updates.pericardium = `Pericardial effusion: ${plaxData.pericardialEffusion}`;
+        pericardiumParts.push(`Pericardial effusion: ${plaxData.pericardialEffusion}`);
+      }
+      if (subcostalData.pericardialEffusion && subcostalData.pericardialEffusion !== 'none') {
+        pericardiumParts.push(`Pericardial effusion: ${subcostalData.pericardialEffusion}`);
+      }
+      if (subcostalData.ivcDiameter) {
+        pericardiumParts.push(`IVC: ${subcostalData.ivcDiameter}cm`);
+      }
+      if (subcostalData.volumeStatus) {
+        pericardiumParts.push(`Volume: ${subcostalData.volumeStatus}`);
+      }
+      if (pericardiumParts.length > 0) {
+        updates.pericardium = pericardiumParts.join(', ');
+      }
+
+      // ASD/VSD
+      if (subcostalData.asd === 'defect' || subcostalData.vsd === 'defect') {
+        const parts = [];
+        if (subcostalData.asd === 'defect') parts.push('ASD detected');
+        if (subcostalData.vsd === 'defect') parts.push('VSD detected');
+        updates.asdVsd = parts.join(', ');
       }
 
       setSummaryData(prev => ({ ...prev, ...updates }));
     }
-  }, [currentStep, plaxData, psaxData, a4cData]);
+  }, [currentStep, plaxData, psaxData, a4cData, a2cData, subcostalData]);
 
   const getViewColor = (stepId: string) => {
     if (stepId.startsWith('plax-')) return 'bg-[#0B5394]';
     if (stepId.startsWith('psax-')) return 'bg-[#1155CC]';
     if (stepId.startsWith('a4c-')) return 'bg-[#0B8043]';
-    if (stepId === 'a2c') return 'bg-[#B45F06]';
-    if (stepId === 'subcostal') return 'bg-[#741B47]';
+    if (stepId.startsWith('a2c-')) return 'bg-[#B45F06]';
+    if (stepId.startsWith('subcostal-')) return 'bg-[#741B47]';
+    if (stepId === 'asd-vsd-detail') return 'bg-[#6A1B9A]';
     if (stepId.startsWith('valve-')) return 'bg-[#E67C73]';
     if (stepId === 'summary') return 'bg-[#34A853]';
     
@@ -420,18 +517,27 @@ export default function ExamPage() {
     
     const titles: Record<string, string> = {
       'plax-2d': 'PLAX - 2D Assessment',
-      'plax-mmode': 'PLAX - M-mode',
+      'plax-mmode-aortic': 'PLAX - M-mode (Aortic Root & LA)',
+      'plax-mmode-lvot': 'PLAX - M-mode (LVOT)',
+      'plax-mmode-lv': 'PLAX - M-mode (LV)',
       'plax-color': 'PLAX - Color Doppler',
       'plax-doppler': 'PLAX - Doppler',
       'psax-2d': 'PSAX - 2D Assessment',
       'psax-mmode': 'PSAX - M-mode',
       'psax-color': 'PSAX - Color Doppler',
       'psax-doppler': 'PSAX - Doppler',
-      'a4c-2d': 'A4C - 2D Assessment',
+      'a4c-2d-lv': 'A4C - 2D Assessment (LV)',
+      'a4c-2d-rv': 'A4C - 2D Assessment (RV)',
       'a4c-color': 'A4C - Color Doppler',
-      'a4c-doppler': 'A4C - Doppler',
-      'a2c': 'Apical 2/3/5 Chamber (A2C/A3C/A5C)',
-      'subcostal': 'Subcostal View',
+      'a4c-doppler-mv': 'A4C - Doppler (MV Inflow)',
+      'a4c-doppler-tr': 'A4C - Doppler (TR/RVSP)',
+      'a4c-doppler-tdi': 'A4C - Doppler (TDI)',
+      'a2c-2d': 'A2C/A3C/A5C - 2D Assessment',
+      'a2c-color': 'A2C/A3C/A5C - Color Doppler',
+      'a2c-doppler': 'A2C/A3C/A5C - Doppler',
+      'subcostal-asd-vsd': 'Subcostal - ASD/VSD/Pericardium',
+      'subcostal-ivc': 'Subcostal - IVC Assessment',
+      'asd-vsd-detail': 'ASD/VSD - Detailed Assessment',
       'summary': 'Summary & Impression'
     };
     
@@ -452,7 +558,15 @@ export default function ExamPage() {
 
     // PLAX substeps
     if (currentStep.startsWith('plax-')) {
-      const substep = currentStep.replace('plax-', '') as '2d' | 'mmode' | 'color' | 'doppler';
+      const substepMap: Record<string, string> = {
+        'plax-2d': '2d',
+        'plax-mmode-aortic': 'mmode-aortic',
+        'plax-mmode-lvot': 'mmode-lvot',
+        'plax-mmode-lv': 'mmode-lv',
+        'plax-color': 'color',
+        'plax-doppler': 'doppler'
+      };
+      const substep = substepMap[currentStep] as '2d' | 'mmode-aortic' | 'mmode-lvot' | 'mmode-lv' | 'color' | 'doppler';
       return (
         <PLAXView
           data={plaxData}
@@ -476,7 +590,15 @@ export default function ExamPage() {
 
     // A4C substeps
     if (currentStep.startsWith('a4c-')) {
-      const substep = currentStep.replace('a4c-', '') as '2d' | 'color' | 'doppler';
+      const substepMap: Record<string, string> = {
+        'a4c-2d-lv': '2d-lv',
+        'a4c-2d-rv': '2d-rv',
+        'a4c-color': 'color',
+        'a4c-doppler-mv': 'doppler-mv',
+        'a4c-doppler-tr': 'doppler-tr',
+        'a4c-doppler-tdi': 'doppler-tdi'
+      };
+      const substep = substepMap[currentStep] as '2d-lv' | '2d-rv' | 'color' | 'doppler-mv' | 'doppler-tr' | 'doppler-tdi';
       return (
         <A4CView
           data={a4cData}
@@ -486,20 +608,37 @@ export default function ExamPage() {
       );
     }
 
+    // A2C substeps
+    if (currentStep.startsWith('a2c-')) {
+      const substep = currentStep.replace('a2c-', '') as '2d' | 'color' | 'doppler';
+      return (
+        <A2CView
+          data={a2cData}
+          onChange={(updates) => setA2cData({ ...a2cData, ...updates })}
+          substep={substep}
+        />
+      );
+    }
+
+    // Subcostal substeps
+    if (currentStep.startsWith('subcostal-')) {
+      const substep = currentStep.replace('subcostal-', '') as 'asd-vsd' | 'ivc';
+      return (
+        <SubcostalView
+          data={subcostalData}
+          onChange={(updates) => setSubcostalData({ ...subcostalData, ...updates })}
+          substep={substep}
+        />
+      );
+    }
+
     switch (currentStep) {
-      case 'a2c':
-      case 'subcostal':
+      case 'asd-vsd-detail':
         return (
-          <div className="flex items-center justify-center h-full p-8">
-            <div className="text-center space-y-4">
-              <h3 className="text-2xl font-semibold text-foreground">
-                {getViewTitle(currentStep)}
-              </h3>
-              <p className="text-muted-foreground">
-                Examination form for this view coming soon
-              </p>
-            </div>
-          </div>
+          <ASDVSDDetailView
+            data={asdVsdDetailData}
+            onChange={(updates) => setAsdVsdDetailData({ ...asdVsdDetailData, ...updates })}
+          />
         );
       case 'summary':
         return (

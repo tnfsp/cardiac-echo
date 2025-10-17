@@ -22,7 +22,7 @@ interface PLAXData {
 interface PLAXViewProps {
   data: PLAXData;
   onChange: (data: Partial<PLAXData>) => void;
-  substep: '2d' | 'mmode' | 'color' | 'doppler';
+  substep: '2d' | 'mmode-aortic' | 'mmode-lvot' | 'mmode-lv' | 'color' | 'doppler';
 }
 
 export default function PLAXView({ data, onChange, substep }: PLAXViewProps) {
@@ -64,10 +64,10 @@ export default function PLAXView({ data, onChange, substep }: PLAXViewProps) {
           </Card>
         )}
 
-        {substep === 'mmode' && (
+        {substep === 'mmode-aortic' && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">M-mode Measurements</CardTitle>
+              <CardTitle className="text-xl">M-mode - Aortic Root & LA</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -86,23 +86,40 @@ export default function PLAXView({ data, onChange, substep }: PLAXViewProps) {
                   testId="input-la"
                 />
               </div>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <MeasurementInput
-                  label="LVOT"
-                  value={data.lvot}
-                  onChange={(value) => onChange({ lvot: value })}
-                  unit="mm"
-                  testId="input-lvot"
-                />
-                <MeasurementInput
-                  label="IVS"
-                  value={data.ivs}
-                  onChange={(value) => onChange({ ivs: value })}
-                  unit="mm"
-                  testId="input-ivs"
-                />
-              </div>
+        {substep === 'mmode-lvot' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">M-mode - LVOT</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <MeasurementInput
+                label="LVOT"
+                value={data.lvot}
+                onChange={(value) => onChange({ lvot: value })}
+                unit="mm"
+                testId="input-lvot"
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {substep === 'mmode-lv' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">M-mode - LV</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <MeasurementInput
+                label="IVS"
+                value={data.ivs}
+                onChange={(value) => onChange({ ivs: value })}
+                unit="mm"
+                testId="input-ivs"
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <MeasurementInput

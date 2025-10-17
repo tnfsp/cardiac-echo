@@ -13,10 +13,7 @@ interface A4CData {
   septalMotion: string | null;
   ms: string;
   mr: string;
-  mrEROA: string;
-  mrVC: string;
   tr: string;
-  trVC: string;
   mvE: string;
   mvA: string;
   decelTime: string;
@@ -30,17 +27,17 @@ interface A4CData {
 interface A4CViewProps {
   data: A4CData;
   onChange: (data: Partial<A4CData>) => void;
-  substep: '2d' | 'color' | 'doppler';
+  substep: '2d-lv' | '2d-rv' | 'color' | 'doppler-mv' | 'doppler-tr' | 'doppler-tdi';
 }
 
 export default function A4CView({ data, onChange, substep }: A4CViewProps) {
   return (
     <div className="h-full flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
-        {substep === '2d' && (
+        {substep === '2d-lv' && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">2D Assessment</CardTitle>
+              <CardTitle className="text-xl">2D Assessment - LV</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
@@ -76,7 +73,16 @@ export default function A4CView({ data, onChange, substep }: A4CViewProps) {
                   testId="input-simpson-ef"
                 />
               </div>
+            </CardContent>
+          </Card>
+        )}
 
+        {substep === '2d-rv' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">2D Assessment - RV</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <CheckboxGroup
@@ -131,61 +137,34 @@ export default function A4CView({ data, onChange, substep }: A4CViewProps) {
               <CardTitle className="text-xl">Color Doppler</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <SeveritySelect
-                label="MS (Mitral Stenosis)"
-                value={data.ms}
-                onChange={(value) => onChange({ ms: value })}
-                testId="select-ms-a4c"
-              />
-              
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <SeveritySelect
+                  label="MS (Mitral Stenosis)"
+                  value={data.ms}
+                  onChange={(value) => onChange({ ms: value })}
+                  testId="select-ms-a4c"
+                />
                 <SeveritySelect
                   label="MR (Mitral Regurgitation)"
                   value={data.mr}
                   onChange={(value) => onChange({ mr: value })}
                   testId="select-mr-a4c"
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <MeasurementInput
-                    label="EROA"
-                    value={data.mrEROA}
-                    onChange={(value) => onChange({ mrEROA: value })}
-                    unit="cm²"
-                    testId="input-mr-eroa"
-                  />
-                  <MeasurementInput
-                    label="VC"
-                    value={data.mrVC}
-                    onChange={(value) => onChange({ mrVC: value })}
-                    unit="mm"
-                    testId="input-mr-vc"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
                 <SeveritySelect
                   label="TR (Tricuspid Regurgitation)"
                   value={data.tr}
                   onChange={(value) => onChange({ tr: value })}
                   testId="select-tr"
                 />
-                <MeasurementInput
-                  label="VC"
-                  value={data.trVC}
-                  onChange={(value) => onChange({ trVC: value })}
-                  unit="mm"
-                  testId="input-tr-vc"
-                />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {substep === 'doppler' && (
+        {substep === 'doppler-mv' && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Doppler</CardTitle>
+              <CardTitle className="text-xl">Doppler - MV Inflow</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -211,7 +190,16 @@ export default function A4CView({ data, onChange, substep }: A4CViewProps) {
                   testId="input-decel-time"
                 />
               </div>
+            </CardContent>
+          </Card>
+        )}
 
+        {substep === 'doppler-tr' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Doppler - TR / RVSP</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <MeasurementInput
                   label="TR CW Vmax"
@@ -228,7 +216,16 @@ export default function A4CView({ data, onChange, substep }: A4CViewProps) {
                   testId="input-rvsp-a4c"
                 />
               </div>
+            </CardContent>
+          </Card>
+        )}
 
+        {substep === 'doppler-tdi' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">Doppler - TDI</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <MeasurementInput
                   label="TDI e' sept"
