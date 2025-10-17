@@ -69,6 +69,12 @@ export async function uploadExamReport(reportData: any) {
     throw new Error('Failed to create spreadsheet');
   }
 
+  // Get the actual sheet ID from the created spreadsheet
+  const sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId;
+  if (sheetId === undefined) {
+    throw new Error('Failed to get sheet ID');
+  }
+
   // Prepare data rows
   const rows: any[][] = [
     ['Cardiac Ultrasound Examination Report'],
@@ -181,7 +187,7 @@ export async function uploadExamReport(reportData: any) {
         {
           repeatCell: {
             range: {
-              sheetId: 0,
+              sheetId: sheetId,
               startRowIndex: 0,
               endRowIndex: 1
             },
