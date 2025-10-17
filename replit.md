@@ -167,9 +167,12 @@ Preferred communication style: Simple, everyday language.
   - ASD/VSD Detail: Deep Purple (#6A1B9A)
   - Valve Details: Coral Red (#E67C73)
   - Summary: Success Green (#34A853)
-- **Patient Header**: 
-  - Maintains expanded view throughout the examination
-  - All patient information fields remain accessible and editable
+- **Collapsible Patient Header**: 
+  - Header starts in expanded view with all fields accessible
+  - "收起" (Collapse) button appears after filling required fields (date, physician, patient ID, bed number)
+  - User can manually choose to collapse the header to save screen space
+  - Collapsed view shows patient info in single line with "編輯" (Edit) button to expand
+  - Header remains expanded until user manually collapses it
 - **Simplified Navigation Bar**: 
   - Top navigation shows only main VIEW labels (PLAX, PSAX, A4C, A2C/A3C/A5C, Subcostal, ASD/VSD Detail, Valve Details, Summary)
   - Substeps hidden from top bar to reduce clutter

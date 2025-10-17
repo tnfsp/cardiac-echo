@@ -128,6 +128,21 @@ export default function PatientHeader({
               ))}
             </div>
           </div>
+
+          {hasRequiredData && (
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsExpanded(false)}
+                data-testid="button-collapse-header"
+                className="min-h-9"
+              >
+                <ChevronUp className="w-4 h-4 mr-2" />
+                收起
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-3 flex items-center justify-between">
