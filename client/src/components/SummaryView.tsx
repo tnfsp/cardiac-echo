@@ -23,7 +23,8 @@ interface SummaryViewProps {
 
 export default function SummaryView({ data, onChange }: SummaryViewProps) {
   return (
-    <div className="space-y-6 p-4 max-w-4xl mx-auto">
+    <div className="h-full overflow-y-auto">
+      <div className="space-y-6 p-6 max-w-4xl mx-auto pb-24">
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">Clinical Summary</CardTitle>
@@ -137,6 +138,7 @@ export default function SummaryView({ data, onChange }: SummaryViewProps) {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

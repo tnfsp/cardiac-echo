@@ -26,7 +26,8 @@ interface PLAXViewProps {
 
 export default function PLAXView({ data, onChange }: PLAXViewProps) {
   return (
-    <div className="space-y-6 p-4 max-w-4xl mx-auto">
+    <div className="h-full overflow-y-auto">
+      <div className="space-y-6 p-6 max-w-4xl mx-auto pb-24">
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">2D Assessment</CardTitle>
@@ -154,6 +155,7 @@ export default function PLAXView({ data, onChange }: PLAXViewProps) {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
