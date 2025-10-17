@@ -51,8 +51,6 @@ export default function ExamPage() {
     mvStatus: null as string | null,
     lvStatus: null as string | null,
     rvotStatus: null as string | null,
-    rvotDiameter: '',
-    paDiameter: '',
     lvFS: '',
     lvFSLevel: null as string | null,
     pvColor: '',

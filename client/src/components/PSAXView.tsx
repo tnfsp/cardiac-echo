@@ -8,8 +8,6 @@ interface PSAXData {
   mvStatus: string | null;
   lvStatus: string | null;
   rvotStatus: string | null;
-  rvotDiameter: string;
-  paDiameter: string;
   lvFS: string;
   lvFSLevel: string | null;
   pvColor: string;
@@ -83,23 +81,6 @@ export default function PSAXView({ data, onChange, substep }: PSAXViewProps) {
                 onChange={(value) => onChange({ rvotStatus: value })}
                 testIdPrefix="rvot-status"
               />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <MeasurementInput
-                  label="RVOT diameter"
-                  value={data.rvotDiameter}
-                  onChange={(value) => onChange({ rvotDiameter: value })}
-                  unit="mm"
-                  testId="input-rvot-diameter"
-                />
-                <MeasurementInput
-                  label="PA"
-                  value={data.paDiameter}
-                  onChange={(value) => onChange({ paDiameter: value })}
-                  unit="mm"
-                  testId="input-pa-diameter"
-                />
-              </div>
             </CardContent>
           </Card>
         )}
