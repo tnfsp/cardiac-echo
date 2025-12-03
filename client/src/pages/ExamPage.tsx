@@ -308,83 +308,138 @@ export default function ExamPage() {
 
   const generateReportText = () => {
     const purposeOptions = [
-      { id: 'preop', label: '術前 (Pre-op)' },
-      { id: 'postop', label: '術後 (Post-op)' },
-      { id: 'ecmo', label: 'ECMO' },
-      { id: 'valve', label: 'Valve/LV評估' }
+      { id: "preop", label: "Pre-op" },
+      { id: "postop", label: "Post-op" },
+      { id: "ecmo", label: "ECMO" },
+      { id: "valve", label: "Valve/LV evaluation" },
     ];
-    
-    const purposeLabels = patientData.purposes.map(p => {
-      const option = purposeOptions.find(opt => opt.id === p);
-      return option?.label || p;
-    }).join(', ');
 
-    let report = `=== 心臟超音波檢查報告 ===\n\n`;
-    report += `【患者資料】\n`;
-    report += `日期: ${patientData.date}\n`;
-    report += `檢查醫師: ${patientData.physician}\n`;
-    report += `病歷號: ${patientData.patientId}\n`;
-    report += `床號: ${patientData.bedNumber}\n`;
-    if (purposeLabels) report += `目的: ${purposeLabels}\n`;
-    report += `\n`;
+    const purposeLabels = patientData.purposes
+      .map((p) => {
+        const option = purposeOptions.find((opt) => opt.id === p);
+        return option?.label || p;
+      })
+      .join(', ');
 
-    report += `【檢查總結】\n`;
+    let report = `=== Cardiac Echo Report ===
+
+`;
+    report += `[Patient]
+`;
+    report += `Date: ${patientData.date}
+`;
+    report += `Physician: ${patientData.physician}
+`;
+    report += `Patient ID: ${patientData.patientId}
+`;
+    report += `Bed number: ${patientData.bedNumber}
+`;
+    if (purposeLabels) report += `Purpose: ${purposeLabels}
+`;
+    report += `
+`;
+
+    report += `[Summary]
+`;
     if (summaryData.lvFunction || summaryData.ef || summaryData.fs) {
       report += `LV Function: ${summaryData.lvFunction}`;
       if (summaryData.ef) report += `, EF: ${summaryData.ef}%`;
       if (summaryData.fs) report += `, FS: ${summaryData.fs}%`;
-      report += `\n`;
+      report += `
+`;
     }
     if (summaryData.rvFunction || summaryData.tapse) {
       report += `RV Function: ${summaryData.rvFunction}`;
       if (summaryData.tapse) report += `, TAPSE: ${summaryData.tapse}mm`;
-      report += `\n`;
+      report += `
+`;
     }
-    if (summaryData.valvular) report += `Valvular: ${summaryData.valvular}\n`;
-    if (summaryData.asdVsd) report += `ASD/VSD: ${summaryData.asdVsd}\n`;
-    if (summaryData.aorta) report += `Aorta/LA: ${summaryData.aorta}\n`;
-    if (summaryData.pericardium) report += `Pericardium: ${summaryData.pericardium}\n`;
-    if (summaryData.ivcVolume) report += `IVC/Volume: ${summaryData.ivcVolume}\n`;
+    if (summaryData.valvular) report += `Valvular: ${summaryData.valvular}
+`;
+    if (summaryData.asdVsd) report += `ASD/VSD: ${summaryData.asdVsd}
+`;
+    if (summaryData.aorta) report += `Aorta/LA: ${summaryData.aorta}
+`;
+    if (summaryData.pericardium) report += `Pericardium: ${summaryData.pericardium}
+`;
+    if (summaryData.ivcVolume) report += `IVC/Volume: ${summaryData.ivcVolume}
+`;
     if (summaryData.notes) {
-      report += `\n【臨床筆記】\n${summaryData.notes}\n`;
+      report += `
+[Bedside notes]
+${summaryData.notes}
+`;
     }
 
-    report += `\n【詳細測量】\n`;
-    
+    report += `
+[Details]
+`;
+
     // PLAX measurements
-    if (plaxData.aorticRoot || plaxData.la || plaxData.lvot || plaxData.ivs || plaxData.lvesd || plaxData.lvpw || plaxData.lvedd) {
-      report += `\nPLAX:\n`;
-      if (plaxData.aorticRoot) report += `  Aortic Root: ${plaxData.aorticRoot}mm\n`;
-      if (plaxData.la) report += `  LA: ${plaxData.la}mm\n`;
-      if (plaxData.lvot) report += `  LVOT: ${plaxData.lvot}mm\n`;
-      if (plaxData.ivs) report += `  IVS: ${plaxData.ivs}mm\n`;
-      if (plaxData.lvesd) report += `  LVESd: ${plaxData.lvesd}mm\n`;
-      if (plaxData.lvpw) report += `  LVPW: ${plaxData.lvpw}mm\n`;
-      if (plaxData.lvedd) report += `  LVEDd: ${plaxData.lvedd}mm\n`;
+    if (
+      plaxData.aorticRoot ||
+      plaxData.la ||
+      plaxData.lvot ||
+      plaxData.ivs ||
+      plaxData.lvesd ||
+      plaxData.lvpw ||
+      plaxData.lvedd
+    ) {
+      report += `
+PLAX:
+`;
+      if (plaxData.aorticRoot) report += `  Aortic Root: ${plaxData.aorticRoot}mm
+`;
+      if (plaxData.la) report += `  LA: ${plaxData.la}mm
+`;
+      if (plaxData.lvot) report += `  LVOT: ${plaxData.lvot}mm
+`;
+      if (plaxData.ivs) report += `  IVS: ${plaxData.ivs}mm
+`;
+      if (plaxData.lvesd) report += `  LVESd: ${plaxData.lvesd}mm
+`;
+      if (plaxData.lvpw) report += `  LVPW: ${plaxData.lvpw}mm
+`;
+      if (plaxData.lvedd) report += `  LVEDd: ${plaxData.lvedd}mm
+`;
       if (plaxData.pericardialEffusion && plaxData.pericardialEffusion !== 'none') {
-        report += `  Pericardial Effusion: ${plaxData.pericardialEffusion}\n`;
+        report += `  Pericardial Effusion: ${plaxData.pericardialEffusion}
+`;
       }
     }
 
     // PSAX measurements
     if (psaxData.lvFS || psaxData.trVmax || psaxData.rvsp) {
-      report += `\nPSAX:\n`;
-      if (psaxData.lvFS) report += `  LV FS: ${psaxData.lvFS}%\n`;
-      if (psaxData.trVmax) report += `  TR Vmax: ${psaxData.trVmax}m/s\n`;
-      if (psaxData.rvsp) report += `  RVSP: ${psaxData.rvsp}mmHg\n`;
+      report += `
+PSAX:
+`;
+      if (psaxData.lvFS) report += `  LV FS: ${psaxData.lvFS}%
+`;
+      if (psaxData.trVmax) report += `  TR Vmax: ${psaxData.trVmax}m/s
+`;
+      if (psaxData.rvsp) report += `  RVSP: ${psaxData.rvsp}mmHg
+`;
     }
 
     // A4C measurements
     if (a4cData.simpsonEF || a4cData.tapse || a4cData.mvE || a4cData.mvA || a4cData.eRatio) {
-      report += `\nA4C:\n`;
-      if (a4cData.simpsonEF) report += `  Simpson EF: ${a4cData.simpsonEF}%\n`;
-      if (a4cData.tapse) report += `  TAPSE: ${a4cData.tapse}mm\n`;
-      if (a4cData.mvE) report += `  MV E: ${a4cData.mvE}cm/s\n`;
-      if (a4cData.mvA) report += `  MV A: ${a4cData.mvA}cm/s\n`;
-      if (a4cData.eRatio) report += `  E/e': ${a4cData.eRatio}\n`;
+      report += `
+A4C:
+`;
+      if (a4cData.simpsonEF) report += `  Simpson EF: ${a4cData.simpsonEF}%
+`;
+      if (a4cData.tapse) report += `  TAPSE: ${a4cData.tapse}mm
+`;
+      if (a4cData.mvE) report += `  MV E: ${a4cData.mvE}cm/s
+`;
+      if (a4cData.mvA) report += `  MV A: ${a4cData.mvA}cm/s
+`;
+      if (a4cData.eRatio) report += `  E/e': ${a4cData.eRatio}
+`;
     }
 
-    report += `\n--- End of Report ---`;
+    report += `
+--- End of Report ---`;
     return report;
   };
 
@@ -393,14 +448,14 @@ export default function ExamPage() {
       const reportText = generateReportText();
       await navigator.clipboard.writeText(reportText);
       toast({
-        title: "報告已複製",
-        description: "完整報告已複製到剪貼簿，可以貼到LINE或其他地方。",
+        title: 'Report copied',
+        description: 'Report text copied to your clipboard.',
       });
     } catch (error) {
       toast({
-        title: "複製失敗",
-        description: "無法複製報告到剪貼簿，請稍後再試。",
-        variant: "destructive"
+        title: 'Copy failed',
+        description: 'Could not copy the report. Please try again.',
+        variant: 'destructive',
       });
     }
   };
@@ -409,7 +464,7 @@ export default function ExamPage() {
     try {
       // Load existing spreadsheet ID from localStorage
       const existingSpreadsheetId = localStorage.getItem('cardiacExamSpreadsheetId');
-      
+
       const reportData = {
         spreadsheetId: existingSpreadsheetId || undefined,
         patient: patientData,
@@ -420,7 +475,7 @@ export default function ExamPage() {
         subcostal: subcostalData,
         asdVsdDetail: asdVsdDetailData,
         valveDetails: valveDetailData,
-        summary: summaryData
+        summary: summaryData,
       };
 
       const response = await apiRequest('POST', '/api/upload-report', reportData);
@@ -429,27 +484,25 @@ export default function ExamPage() {
       if (result.spreadsheetId && result.spreadsheetUrl) {
         // Save spreadsheet ID to localStorage for future uploads
         localStorage.setItem('cardiacExamSpreadsheetId', result.spreadsheetId);
-        
+
         const isFirstTime = !existingSpreadsheetId;
         toast({
-          title: "上傳成功",
-          description: isFirstTime 
-            ? "已創建新的Google Sheets記錄表，後續檢查將記錄到同一個表格中。" 
-            : "檢查報告已新增到Google Sheets雲端記錄表。",
+          title: 'Upload success',
+          description: isFirstTime
+            ? 'Created a new Google Sheets workbook for this patient.'
+            : 'Report was appended to the existing Google Sheets workbook.',
         });
-        // Optionally open the spreadsheet
         // window.open(result.spreadsheetUrl, '_blank');
       }
     } catch (error: any) {
       console.error('Upload failed:', error);
       toast({
-        title: "上傳失敗",
-        description: error.message || "無法上傳報告到Google Sheets，請稍後再試。",
-        variant: "destructive"
+        title: 'Upload failed',
+        description: error.message || 'Could not upload the report. Please try again.',
+        variant: 'destructive',
       });
     }
   };
-
   // Auto-populate summary based on collected data
   useEffect(() => {
     if (currentStep === 'summary') {
