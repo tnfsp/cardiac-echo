@@ -1,50 +1,29 @@
-import { google } from 'googleapis';
+import { google, type sheets_v4 } from "googleapis";
 
-let connectionSettings: any;
+const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
+const DEFAULT_SHEET_TITLE = "Exam Records";
 
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
+let cachedSheetsClient: sheets_v4.Sheets | null = null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+async function getSheetsClient(): Promise<sheets_v4.Sheets> {
+  if (cachedSheetsClient) return cachedSheetsClient;
+
+  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+  if (!clientEmail || !privateKey) {
+    throw new Error("Missing Google Sheets service account credentials");
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-sheet',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+  const auth = new google.auth.JWT(
+    clientEmail,
+    undefined,
+    privateKey.replace(/\\n/g, "\n"),
+    SCOPES,
+  );
 
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Google Sheet not connected');
-  }
-  return accessToken;
-}
-
-export async function getUncachableGoogleSheetClient() {
-  const accessToken = await getAccessToken();
-
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken
-  });
-
-  return google.sheets({ version: 'v4', auth: oauth2Client });
+  cachedSheetsClient = google.sheets({ version: "v4", auth });
+  return cachedSheetsClient;
 }
 
 // Helper function to create header row
@@ -137,135 +116,143 @@ function createHeaderRow(): string[] {
 // Helper function to create data row from report data
 function createDataRow(reportData: any): string[] {
   return [
-    reportData.patient.date || '',
-    reportData.patient.physician || '',
-    reportData.patient.patientId || '',
-    reportData.patient.bedNumber || '',
-    reportData.patient.purposes?.join(', ') || '',
+    reportData?.patient?.date || '',
+    reportData?.patient?.physician || '',
+    reportData?.patient?.patientId || '',
+    reportData?.patient?.bedNumber || '',
+    reportData?.patient?.purposes?.join(', ') || '',
     // PLAX
-    reportData.plax.avMvStructure || '',
-    reportData.plax.pericardialEffusion || '',
-    reportData.plax.aorticRoot || '',
-    reportData.plax.la || '',
-    reportData.plax.lvot || '',
-    reportData.plax.ivs || '',
-    reportData.plax.lvesd || '',
-    reportData.plax.lvpw || '',
-    reportData.plax.lvedd || '',
-    reportData.plax.mr || '',
-    reportData.plax.ms || '',
-    reportData.plax.ar || '',
-    reportData.plax.as || '',
+    reportData?.plax?.avMvStructure || '',
+    reportData?.plax?.pericardialEffusion || '',
+    reportData?.plax?.aorticRoot || '',
+    reportData?.plax?.la || '',
+    reportData?.plax?.lvot || '',
+    reportData?.plax?.ivs || '',
+    reportData?.plax?.lvesd || '',
+    reportData?.plax?.lvpw || '',
+    reportData?.plax?.lvedd || '',
+    reportData?.plax?.mr || '',
+    reportData?.plax?.ms || '',
+    reportData?.plax?.ar || '',
+    reportData?.plax?.as || '',
     // PSAX
-    reportData.psax.avStatus || '',
-    reportData.psax.mvStatus || '',
-    reportData.psax.lvStatus || '',
-    reportData.psax.rvotStatus || '',
-    reportData.psax.lvFS || '',
-    reportData.psax.lvFSLevel || '',
-    reportData.psax.pvColor || '',
-    reportData.psax.tvColor || '',
-    reportData.psax.avColor || '',
-    reportData.psax.trVmax || '',
-    reportData.psax.rvsp || '',
+    reportData?.psax?.avStatus || '',
+    reportData?.psax?.mvStatus || '',
+    reportData?.psax?.lvStatus || '',
+    reportData?.psax?.rvotStatus || '',
+    reportData?.psax?.lvFS || '',
+    reportData?.psax?.lvFSLevel || '',
+    reportData?.psax?.pvColor || '',
+    reportData?.psax?.tvColor || '',
+    reportData?.psax?.avColor || '',
+    reportData?.psax?.trVmax || '',
+    reportData?.psax?.rvsp || '',
     // A4C
-    reportData.a4c.lvSize || '',
-    reportData.a4c.lvContraction || '',
-    reportData.a4c.simpsonEF || '',
-    reportData.a4c.rvSize || '',
-    reportData.a4c.rvContraction || '',
-    reportData.a4c.tapse || '',
-    reportData.a4c.septalMotion || '',
-    reportData.a4c.ms || '',
-    reportData.a4c.mr || '',
-    reportData.a4c.tr || '',
-    reportData.a4c.mvE || '',
-    reportData.a4c.mvA || '',
-    reportData.a4c.decelTime || '',
-    reportData.a4c.trVmax || '',
-    reportData.a4c.rvsp || '',
-    reportData.a4c.tdiSept || '',
-    reportData.a4c.tdiLat || '',
-    reportData.a4c.eRatio || '',
+    reportData?.a4c?.lvSize || '',
+    reportData?.a4c?.lvContraction || '',
+    reportData?.a4c?.simpsonEF || '',
+    reportData?.a4c?.rvSize || '',
+    reportData?.a4c?.rvContraction || '',
+    reportData?.a4c?.tapse || '',
+    reportData?.a4c?.septalMotion || '',
+    reportData?.a4c?.ms || '',
+    reportData?.a4c?.mr || '',
+    reportData?.a4c?.tr || '',
+    reportData?.a4c?.mvE || '',
+    reportData?.a4c?.mvA || '',
+    reportData?.a4c?.decelTime || '',
+    reportData?.a4c?.trVmax || '',
+    reportData?.a4c?.rvsp || '',
+    reportData?.a4c?.tdiSept || '',
+    reportData?.a4c?.tdiLat || '',
+    reportData?.a4c?.eRatio || '',
     // A2C
-    reportData.a2c.lvWallMotion || '',
-    reportData.a2c.avLvotStructure || '',
-    reportData.a2c.lvotDiameter || '',
-    reportData.a2c.mr || '',
-    reportData.a2c.ar || '',
-    reportData.a2c.ms || '',
-    reportData.a2c.as || '',
-    reportData.a2c.avVmax || '',
-    reportData.a2c.avMeanPG || '',
-    reportData.a2c.avAVA || '',
+    reportData?.a2c?.lvWallMotion || '',
+    reportData?.a2c?.avLvotStructure || '',
+    reportData?.a2c?.lvotDiameter || '',
+    reportData?.a2c?.mr || '',
+    reportData?.a2c?.ar || '',
+    reportData?.a2c?.ms || '',
+    reportData?.a2c?.as || '',
+    reportData?.a2c?.avVmax || '',
+    reportData?.a2c?.avMeanPG || '',
+    reportData?.a2c?.avAVA || '',
     // Subcostal
-    reportData.subcostal.asd || '',
-    reportData.subcostal.vsd || '',
-    reportData.subcostal.pericardialEffusion || '',
-    reportData.subcostal.ivcDiameter || '',
-    reportData.subcostal.ivcCollapseRatio || '',
-    reportData.subcostal.volumeStatus || '',
-    reportData.subcostal.raIvcFlow || '',
+    reportData?.subcostal?.asd || '',
+    reportData?.subcostal?.vsd || '',
+    reportData?.subcostal?.pericardialEffusion || '',
+    reportData?.subcostal?.ivcDiameter || '',
+    reportData?.subcostal?.ivcCollapseRatio || '',
+    reportData?.subcostal?.volumeStatus || '',
+    reportData?.subcostal?.raIvcFlow || '',
     // Summary
-    reportData.summary.lvFunction || '',
-    reportData.summary.ef || '',
-    reportData.summary.fs || '',
-    reportData.summary.rvFunction || '',
-    reportData.summary.tapse || '',
-    reportData.summary.valvular || '',
-    reportData.summary.asdVsd || '',
-    reportData.summary.aorta || '',
-    reportData.summary.pericardium || '',
-    reportData.summary.ivcVolume || '',
-    reportData.summary.notes || ''
+    reportData?.summary?.lvFunction || '',
+    reportData?.summary?.ef || '',
+    reportData?.summary?.fs || '',
+    reportData?.summary?.rvFunction || '',
+    reportData?.summary?.tapse || '',
+    reportData?.summary?.valvular || '',
+    reportData?.summary?.asdVsd || '',
+    reportData?.summary?.aorta || '',
+    reportData?.summary?.pericardium || '',
+    reportData?.summary?.ivcVolume || '',
+    reportData?.summary?.notes || ''
   ];
 }
 
 export async function uploadExamReport(reportData: any, existingSpreadsheetId?: string) {
-  const sheets = await getUncachableGoogleSheetClient();
-  
-  let spreadsheetId: string;
-  let sheetId: number;
+  const sheets = await getSheetsClient();
+  const providedSpreadsheetId =
+    existingSpreadsheetId || process.env.GOOGLE_SHEETS_ID;
 
-  if (existingSpreadsheetId) {
-    // Use existing spreadsheet
-    spreadsheetId = existingSpreadsheetId;
-    
-    // Get the sheet info
+  let spreadsheetId = providedSpreadsheetId;
+  let sheetId: number;
+  let sheetTitle = DEFAULT_SHEET_TITLE;
+
+  if (spreadsheetId) {
+    // Use existing spreadsheet (either passed from client or env)
     const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId
+      spreadsheetId,
     });
-    
-    sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
-    
+
+    const sheet =
+      spreadsheet.data.sheets?.find(
+        (s) => s.properties?.title === DEFAULT_SHEET_TITLE,
+      ) || spreadsheet.data.sheets?.[0];
+
+    sheetId = sheet?.properties?.sheetId || 0;
+    sheetTitle = sheet?.properties?.title || DEFAULT_SHEET_TITLE;
+
     // Append new data row
     const dataRow = createDataRow(reportData);
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: 'Exam Records!A:A',
-      valueInputOption: 'RAW',
+      range: `${sheetTitle}!A:A`,
+      valueInputOption: "RAW",
       requestBody: {
-        values: [dataRow]
-      }
+        values: [dataRow],
+      },
     });
   } else {
     // Create a new spreadsheet
     const spreadsheet = await sheets.spreadsheets.create({
       requestBody: {
         properties: {
-          title: `Cardiac Exam Records`
+          title: "Cardiac Exam Records",
         },
-        sheets: [{
-          properties: {
-            title: 'Exam Records'
-          }
-        }]
-      }
+        sheets: [
+          {
+            properties: {
+              title: DEFAULT_SHEET_TITLE,
+            },
+          },
+        ],
+      },
     });
 
     spreadsheetId = spreadsheet.data.spreadsheetId!;
     if (!spreadsheetId) {
-      throw new Error('Failed to create spreadsheet');
+      throw new Error("Failed to create spreadsheet");
     }
 
     sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId || 0;
@@ -273,14 +260,14 @@ export async function uploadExamReport(reportData: any, existingSpreadsheetId?: 
     // Write header row and first data row
     const headerRow = createHeaderRow();
     const dataRow = createDataRow(reportData);
-    
+
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: 'Exam Records!A1',
-      valueInputOption: 'RAW',
+      range: `${DEFAULT_SHEET_TITLE}!A1`,
+      valueInputOption: "RAW",
       requestBody: {
-        values: [headerRow, dataRow]
-      }
+        values: [headerRow, dataRow],
+      },
     });
 
     // Format the header row (bold, frozen)
@@ -293,42 +280,42 @@ export async function uploadExamReport(reportData: any, existingSpreadsheetId?: 
               range: {
                 sheetId: sheetId,
                 startRowIndex: 0,
-                endRowIndex: 1
+                endRowIndex: 1,
               },
               cell: {
                 userEnteredFormat: {
                   textFormat: {
                     bold: true,
-                    fontSize: 11
+                    fontSize: 11,
                   },
                   backgroundColor: {
                     red: 0.9,
                     green: 0.9,
-                    blue: 0.9
-                  }
-                }
+                    blue: 0.9,
+                  },
+                },
               },
-              fields: 'userEnteredFormat(textFormat,backgroundColor)'
-            }
+              fields: "userEnteredFormat(textFormat,backgroundColor)",
+            },
           },
           {
             updateSheetProperties: {
               properties: {
                 sheetId: sheetId,
                 gridProperties: {
-                  frozenRowCount: 1
-                }
+                  frozenRowCount: 1,
+                },
               },
-              fields: 'gridProperties.frozenRowCount'
-            }
-          }
-        ]
-      }
+              fields: "gridProperties.frozenRowCount",
+            },
+          },
+        ],
+      },
     });
   }
 
   return {
     spreadsheetId,
-    spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`
+    spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
   };
 }
