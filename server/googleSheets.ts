@@ -9,7 +9,12 @@ async function getSheetsClient(): Promise<sheets_v4.Sheets> {
   if (cachedSheetsClient) return cachedSheetsClient;
 
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const base64Key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64;
+  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+  const privateKey = base64Key
+    ? Buffer.from(base64Key, "base64").toString("utf8")
+    : rawKey;
 
   if (!clientEmail || !privateKey) {
     throw new Error("Missing Google Sheets service account credentials");
