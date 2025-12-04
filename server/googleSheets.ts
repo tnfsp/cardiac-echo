@@ -1,39 +1,86 @@
 import { google } from 'googleapis';
 
-let connectionSettings: any;
+type ConnectionSettings = {
+  access_token: string;
+  expires_at?: number;
+};
+
+let connectionSettings: ConnectionSettings | null;
+
+function isCachedTokenValid(settings: ConnectionSettings | null) {
+  if (!settings?.expires_at) return false;
+
+  // Add a one-minute safety buffer to avoid using tokens that are about to expire
+  return settings.expires_at - 60_000 > Date.now();
+}
 
 async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (isCachedTokenValid(connectionSettings)) {
+    return connectionSettings!.access_token;
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=google-sheet',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+  const accessToken = await getAccessTokenFromEnv();
 
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Google Sheet not connected');
+  if (!accessToken) {
+    throw new Error('Google credentials not configured in environment variables');
   }
+
   return accessToken;
+}
+
+async function getAccessTokenFromEnv(): Promise<string | null> {
+  const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const serviceAccountKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+  if (serviceAccountEmail && serviceAccountKey) {
+    const jwtClient = new google.auth.JWT(
+      serviceAccountEmail,
+      undefined,
+      serviceAccountKey.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/spreadsheets']
+    );
+
+    const { access_token: accessToken, expiry_date: expiryDate } = await jwtClient.authorize();
+
+    if (!accessToken) {
+      throw new Error('Failed to authorize Google service account');
+    }
+
+    connectionSettings = {
+      access_token: accessToken,
+      expires_at: expiryDate || Date.now() + 50 * 60 * 1000 // default to ~50 minutes if missing
+    };
+
+    return accessToken;
+  }
+
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  if (refreshToken) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      throw new Error('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are required when using GOOGLE_REFRESH_TOKEN');
+    }
+
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+
+    if (!credentials?.access_token) {
+      throw new Error('Failed to refresh Google OAuth token');
+    }
+
+    connectionSettings = {
+      access_token: credentials.access_token,
+      expires_at: credentials.expiry_date || Date.now() + 50 * 60 * 1000
+    };
+
+    return credentials.access_token;
+  }
+
+  return null;
 }
 
 export async function getUncachableGoogleSheetClient() {
