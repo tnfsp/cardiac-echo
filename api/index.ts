@@ -1,5 +1,5 @@
 import express from "express";
-import { uploadExamReport } from "./googleSheets";
+import { uploadExamReport } from "./googleSheets.js";
 
 const app = express();
 
