@@ -20,12 +20,11 @@ async function getSheetsClient(): Promise<sheets_v4.Sheets> {
     throw new Error("Missing Google Sheets service account credentials");
   }
 
-  const auth = new google.auth.JWT(
-    clientEmail,
-    undefined,
-    privateKey.replace(/\\n/g, "\n"),
-    SCOPES,
-  );
+  const auth = new google.auth.JWT({
+    email: clientEmail,
+    key: privateKey.replace(/\\n/g, "\n"),
+    scopes: SCOPES,
+  });
 
   cachedSheetsClient = google.sheets({ version: "v4", auth });
   return cachedSheetsClient;
